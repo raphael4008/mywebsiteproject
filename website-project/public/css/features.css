@@ -1,0 +1,115 @@
+/* STYLING FOR THE FEATURES PAGE */
+
+/* General Section Styling */
+.features-section {
+    padding: 60px 0;
+}
+
+/* Tab Navigation */
+.features-nav {
+    border-bottom: 1px solid #dee2e6;
+    margin-bottom: 40px;
+}
+
+.features-nav .nav-link {
+    color: #6c757d;
+    font-weight: 600;
+    padding: 1rem 1.5rem;
+    border: none;
+    border-bottom: 3px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.features-nav .nav-link.active {
+    color: #007bff;
+    border-bottom-color: #007bff;
+}
+
+/* Tab Content */
+.tab-pane {
+    padding: 20px;
+}
+
+/* Service Cards */
+.service-card {
+    background-color: #fff;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 30px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.service-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.service-card h3 {
+    font-size: 1.75rem;
+    margin-bottom: 15px;
+    color: #343a40;
+}
+
+/* Review Form */
+#reviewForm {
+    background-color: #f8f9fa;
+    padding: 30px;
+    border-radius: 8px;
+}
+
+.star-rating {
+    font-size: 2rem;
+    cursor: pointer;
+}
+
+.star {
+    color: #e9ecef;
+    transition: color 0.2s;
+}
+
+.star.rated,
+.star:hover {
+    color: #ffc107;
+}
+
+/* Marketplace */
+#marketplace-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+.marketplace-item {
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    overflow: hidden;
+    transition: box-shadow 0.3s ease;
+}
+
+.marketplace-item:hover {
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.marketplace-item img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+}
+
+.marketplace-item-content {
+    padding: 15px;
+}
+
+.marketplace-item-content h5 {
+    font-size: 1.25rem;
+    margin-bottom: 10px;
+}
+
+.marketplace-item-content p {
+    color: #6c757d;
+    margin-bottom: 15px;
+}
+
+.marketplace-item-content .btn {
+    width: 100%;
+}

@@ -1,0 +1,44 @@
+/* Transport Page Specific Styles */
+.transport-hero {
+    text-align: center;
+    padding: 4rem 1rem;
+    background-color: #f4f4f4;
+}
+
+.transport-form-section {
+    padding: 2rem 1rem;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.transport-form {
+    display: grid;
+    grid-gap: 1rem;
+}
+
+.available-drivers {
+    padding: 2rem 1rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.driver-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    grid-gap: 1rem;
+}
+
+.driver-card {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 1rem;
+    text-align: center;
+}
+
+.driver-card img {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 1rem;
+}

@@ -1,0 +1,110 @@
+/* STYLING FOR THE LOCATION AND PEOPLE PAGE */
+
+/* General Section Styling */
+.location-section {
+    padding: 60px 0;
+}
+
+/* Tab Navigation */
+.location-nav {
+    border-bottom: 1px solid #dee2e6;
+    margin-bottom: 40px;
+}
+
+.location-nav .nav-link {
+    color: #6c757d;
+    font-weight: 600;
+    padding: 1rem 1.5rem;
+    border: none;
+    border-bottom: 3px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.location-nav .nav-link.active {
+    color: #007bff;
+    border-bottom-color: #007bff;
+}
+
+/* Tab Content */
+.tab-pane {
+    padding: 20px;
+}
+
+/* Agent Cards */
+.agent-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 30px;
+    margin-top: 30px;
+}
+
+.agent-card {
+    background-color: #fff;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.agent-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.agent-card img {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 15px;
+}
+
+.agent-card h3 {
+    font-size: 1.5rem;
+    margin-bottom: 5px;
+}
+
+.agent-card p {
+    color: #6c757d;
+    margin-bottom: 15px;
+}
+
+.agent-card .btn {
+    width: 100%;
+}
+
+/* Neighborhood List */
+#neighborhood-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.neighborhood-card {
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    overflow: hidden;
+    transition: box-shadow 0.3s ease;
+}
+
+.neighborhood-card:hover {
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.neighborhood-card img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+}
+
+.neighborhood-card-content {
+    padding: 15px;
+}
+
+/* Transport Form */
+.transport-form {
+    background-color: #f8f9fa;
+    padding: 30px;
+    border-radius: 8px;
+}

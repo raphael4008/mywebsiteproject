@@ -1,0 +1,3 @@
+I am unable to run the database migrations directly. Please run the following command in your terminal to create the necessary tables in your database:
+
+php website-project/database/migrations.php

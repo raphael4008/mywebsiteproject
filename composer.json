@@ -1,0 +1,23 @@
+{
+    "require": {
+        "vlucas/phpdotenv": "^5.6",
+        "guzzlehttp/guzzle": "^7.10",
+        "phpmailer/phpmailer": "^7.0",
+        "twilio/sdk": "^8.8",
+        "google/apiclient": "^2.18",
+        "openai-php/client": "^0.18.0",
+        "gabordemooij/redbean": "^5.7",
+        "league/flysystem": "^3.30",
+        "bramus/router": "~1.6"
+    },
+    "config": {
+        "allow-plugins": {
+            "php-http/discovery": true
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "website-project/src/"
+        }
+    }
+}

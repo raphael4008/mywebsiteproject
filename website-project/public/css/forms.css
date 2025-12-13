@@ -1,0 +1,85 @@
+/* General form styling */
+form input[type="text"],
+form input[type="email"],
+form input[type="tel"],
+form input[type="date"],
+form input[type="number"],
+form textarea,
+form select {
+    transition: border-color 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+}
+
+/* Hover and focus effects for form inputs */
+form input[type="text"]:hover,
+form input[type="email"]:hover,
+form input[type="tel"]:hover,
+form input[type="date"]:hover,
+form input[type="number"]:hover,
+form textarea:hover,
+form select:hover {
+    border-color: #4f46e5; /* indigo-600 */
+}
+
+/* Consistent button styling for forms */
+form button[type="submit"],
+form .cta-btn {
+    background-color: var(--primary);
+    color: white;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    width: 100%;
+    font-size: 1rem;
+}
+
+form button[type="submit"]:hover,
+form .cta-btn:hover {
+    background-color: var(--accent);
+}
+
+/* Star Rating */
+.star-rating {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 1rem;
+}
+
+.star-rating .star {
+    font-size: 2.5rem;
+    color: #ccc;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.star-rating .star:hover,
+.star-rating .star.selected {
+    color: #ffc107; /* Bootstrap's warning color */
+}
+
+/* AI Search Loading Spinner */
+.ai-loading {
+    position: relative;
+}
+
+.ai-loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    transform: translateY(-50%);
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(0, 0, 0, 0.1);
+    border-top-color: #4f46e5; /* indigo-600 */
+    border-radius: 50%;
+    animation: spinner 0.8s linear infinite;
+}
+
+@keyframes spinner {
+    to {
+        transform: translateY(-50%) rotate(360deg);
+    }
+}

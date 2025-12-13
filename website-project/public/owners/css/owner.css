@@ -1,0 +1,43 @@
+/* Import the main site's variables and the portal's font */
+@import url('../../css/styles.css');
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+
+body {
+    font-family: 'Roboto', sans-serif;
+    background-color: var(--muted);
+}
+
+/* Custom classes using theme variables */
+.btn-primary {
+    background-color: var(--primary);
+    color: white;
+    font-weight: 500;
+    border-radius: 8px;
+    transition: background-color 150ms ease-in-out;
+}
+.btn-primary:hover {
+    background-color: var(--accent);
+}
+
+.btn-danger {
+    background-color: var(--accent);
+    color: white;
+    font-weight: 500;
+    border-radius: 8px;
+    transition: background-color 150ms ease-in-out;
+}
+.btn-danger:hover {
+    opacity: 0.9;
+}
+
+.portal-sidebar {
+    background-color: var(--portal-bg);
+    color: var(--portal-text);
+}
+.portal-sidebar .logo {
+    border-bottom: 1px solid var(--portal-border);
+}
+.portal-sidebar nav a.router-link-exact-active {
+    background-color: var(--portal-active-bg);
+    color: var(--text); /* Or keep it as white if preferred */
+}

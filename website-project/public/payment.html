@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Payment – HouseHunter</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/payment.css">
+    <script src="https://js.stripe.com/v3/"></script>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light" role="navigation" aria-label="Main navigation"></nav>
+
+    <main class="container py-5">
+        <div class="text-center mb-5">
+            <h1 class="display-5 fw-bold">Secure Payment</h1>
+            <p class="lead text-muted">Complete your reservation by providing the payment details below.</p>
+        </div>
+
+        <div class="payment-layout">
+            <!-- Order Summary Column -->
+            <div class="order-summary">
+                <h4>Order Summary</h4>
+                <div id="listingSummary">
+                    <!-- Listing summary will be loaded here -->
+                </div>
+                <div class="cost-breakdown">
+                    <div class="row">
+                        <span>Reservation Fee</span>
+                        <strong>KES 500.00</strong>
+                    </div>
+                    <div class="row total">
+                        <span>Total</span>
+                        <strong>KES 500.00</strong>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment Methods Column -->
+            <div class="payment-methods">
+                <ul class="nav nav-pills nav-fill mb-4" id="payment-tabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link active" id="mpesa-tab" data-bs-toggle="tab" data-bs-target="#mpesa-details" role="tab">M-Pesa</a>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link" id="card-tab" data-bs-toggle="tab" data-bs-target="#card-details" role="tab">Card</a>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link" id="paypal-tab" data-bs-toggle="tab" data-bs-target="#paypal-details" role="tab">PayPal</a>
+                    </li>
+                </ul>
+
+                <div class="tab-content" id="payment-tabs-content">
+                    <div class="tab-pane fade show active" id="mpesa-details" role="tabpanel">
+                        <h5>Pay with M-Pesa</h5>
+                        <form id="mpesa-form">
+                            <div class="mb-3">
+                                <label for="mpesa-phone" class="form-label">Phone Number</label>
+                                <input type="text" class="form-control" id="mpesa-phone" placeholder="e.g., 254712345678" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100">Pay KES 500</button>
+                        </form>
+                        <div id="mpesa-response" class="mt-3 text-center"></div>
+                    </div>
+
+                    <div class="tab-pane fade" id="card-details" role="tabpanel">
+                        <h5>Pay with Card</h5>
+                        <form id="card-form">
+                            <div class="mb-3">
+                                <label for="card-holder" class="form-label">Cardholder Name</label>
+                                <input type="text" class="form-control" id="card-holder" placeholder="John Doe" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="card-element" class="form-label">Credit or debit card</label>
+                                <div id="card-element" class="form-control">
+                                    <!-- A Stripe Element will be inserted here. -->
+                                </div>
+                                <div id="card-errors" role="alert" class="text-danger mt-2"></div>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100">Pay KES 500</button>
+                        </form>
+                    </div>
+
+                    <div class="tab-pane fade" id="paypal-details" role="tabpanel">
+                        <h5 class="text-center">Pay with PayPal</h5>
+                        <div class="text-center">
+                            <p>You will be redirected to PayPal to complete your payment.</p>
+                            <div id="paypal-button-container"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="trust-badges">
+                    <span class="lock-icon">🔒</span>
+                    <span>SSL Secure Payment</span>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer></footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://www.paypal.com/sdk/js?client-id=YOUR_CLIENT_ID"></script>
+    <script src="js/nav.js" type="module"></script>
+    <script src="js/payment.js" type="module"></script>
+    <script src="js/footer.js" type="module"></script>
+</body>
+</html>

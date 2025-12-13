@@ -1,0 +1,20 @@
+@import url('../css/styles.css');
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+
+body {
+    font-family: 'Roboto', sans-serif;
+    background-color: var(--muted);
+}
+
+.portal-sidebar {
+    background-color: #2c3e50; /* A professional, dark sidebar color */
+    color: #ecf0f1;
+}
+.portal-sidebar .logo {
+    border-bottom: 1px solid #34495e;
+}
+
+.portal-sidebar nav a.router-link-exact-active {
+    background-color: #34495e;
+    color: white;
+}
