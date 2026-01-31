@@ -1,0 +1,149 @@
+/* styles/hero.css */
+
+:root {
+    --dark-bg: #1a1a1a;
+    --text-light: #f0f0f0;
+    --accent-color: #007bff;
+    --glass-bg: rgba(255, 255, 255, 0.1);
+    --glass-border: rgba(255, 255, 255, 0.2);
+}
+
+.hero-section {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    width: 100%;
+    overflow: hidden;
+    color: var(--text-light);
+    text-align: center;
+}
+
+.hero-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+}
+
+.hero-background video,
+.hero-background img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.hero-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5); /* Dark overlay */
+    z-index: 0;
+}
+
+.hero-content {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1rem;
+}
+
+/* Glassmorphism Search Bar */
+.smart-search-bar {
+    margin-top: 2rem;
+    width: 100%;
+    max-width: 600px;
+    padding: 1rem;
+    border-radius: 15px;
+    
+    /* Glassmorphism effect */
+    background: var(--glass-bg);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px); /* For Safari */
+    border: 1px solid var(--glass-border);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+}
+
+.smart-search-bar h1 {
+    font-size: 2.5rem;
+    margin-bottom: 1.5rem;
+    font-weight: 600;
+}
+
+.search-input-group {
+    display: flex;
+    width: 100%;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.search-input-group input {
+    flex-grow: 1;
+    border: none;
+    padding: 1rem;
+    font-size: 1.1rem;
+    background-color: rgba(255, 255, 255, 0.9);
+    color: #333;
+}
+
+.search-input-group input:focus {
+    outline: none;
+}
+
+.search-input-group button {
+    border: none;
+    padding: 0 1.5rem;
+    background: var(--accent-color);
+    color: white;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.search-input-group button:hover {
+    background-color: #0056b3;
+}
+
+
+/* Live Stats Ticker */
+.live-stats-ticker {
+    position: absolute;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1;
+    background-color: rgba(0, 0, 0, 0.4);
+    padding: 0.5rem 1.5rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+}
+
+.live-indicator {
+    width: 10px;
+    height: 10px;
+    background-color: #28a745;
+    border-radius: 50%;
+    margin-right: 10px;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(40, 167, 69, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(40, 167, 69, 0);
+    }
+}

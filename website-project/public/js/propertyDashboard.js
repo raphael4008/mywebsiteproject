@@ -37,7 +37,7 @@ function setupDashboardActions() {
     editButtons.forEach(button => {
         button.addEventListener('click', () => {
             const propertyId = button.dataset.propertyId;
-            window.location.href = `/edit-property.html?id=${propertyId}`;
+            window.location.href = `edit-property.html?id=${propertyId}`;
         });
     });
 

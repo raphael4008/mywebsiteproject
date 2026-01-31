@@ -277,6 +277,104 @@ body {
 
 }
 
+/* Pinterest-style Listings Page */
+.masonry-column {
+    display: flex;
+    flex-direction: column;
+    width: 25%; /* default for 4 columns */
+}
 
+.listing-pin-card {
+    background-color: #fff;
+    border-radius: 16px;
+    margin-bottom: 20px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    transition: box-shadow 0.3s ease;
+    break-inside: avoid; /* Prevents card from breaking across columns */
+}
 
+.listing-pin-card:hover {
+    box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+}
 
+.listing-pin-card img {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+.card-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 50%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    display: flex;
+    align-items: flex-end;
+    padding: 1rem;
+}
+
+.listing-pin-card:hover .card-overlay {
+    opacity: 1;
+}
+
+.card-title-pin {
+    color: white;
+    font-weight: 700;
+    font-size: 1.1rem;
+}
+
+.card-body-pin {
+    padding: 1rem;
+}
+/* Styles for the micro-carousel within listing cards */
+.listing-pin-card .carousel-control-prev,
+.listing-pin-card .carousel-control-next {
+    width: 20%; /* Make controls smaller */
+    opacity: 0; /* Hide controls by default */
+    transition: opacity 0.2s ease;
+}
+
+.listing-pin-card:hover .carousel-control-prev,
+.listing-pin-card:hover .carousel-control-next {
+    opacity: 0.7; /* Show controls on hover */
+}
+
+.listing-pin-card .carousel-control-prev-icon,
+.listing-pin-card .carousel-control-next-icon {
+    width: 1.5rem;
+    height: 1.5rem;
+    background-size: 100%, 100%;
+}
+
+.listing-pin-card .carousel-indicators {
+    display: none; /* Hide indicators for micro-carousel */
+}
+
+/* Notifications */
+#notification-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 2000;
+}
+.notification {
+    background: #fff;
+    padding: 10px 14px;
+    border-radius: 8px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+    margin-bottom: 8px;
+}
+.notification-info { border-left: 4px solid #0d6efd; }
+.notification-success { border-left: 4px solid #198754; }
+.notification-error { border-left: 4px solid #dc3545; }
+.notification.fade-out { opacity: 0; transform: translateY(-6px); transition: opacity 0.5s, transform 0.5s; }
+
+/* Loader below listings */
+#listings-loader { text-align: center; margin-top: 12px; }
+
+/* Simple skeleton shimmer could be added later; basic grey blocks used for now */

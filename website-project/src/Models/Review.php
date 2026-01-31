@@ -3,23 +3,16 @@ namespace App\Models;
 
 use \PDO;
 use \Exception;
-use Database;
+use App\Models\BaseModel; // Add use statement for BaseModel
 
-class Review {
-    private static function getDB() {
-        try {
-            return \Database::getInstance();
-        } catch (PDOException $e) {
-            // In a real application, you would log this error
-            throw new Exception("Database connection failed");
-        }
-    }
+class Review extends BaseModel {
+    protected static $tableName = 'reviews';
+    protected static $primaryKey = 'id';
+    protected static $fillable = ['listing_id', 'reviewer_id', 'rating', 'comment'];
 
     public static function getAll() {
         try {
-            $pdo = self::getDB();
-            $stmt = $pdo->query("SELECT * FROM reviews ORDER BY created_at DESC");
-            return $stmt->fetchAll();
+            return static::rawQuery("SELECT * FROM " . static::$tableName . " ORDER BY created_at DESC", [], true, PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
             // Log error
             throw new Exception("Error fetching reviews");
@@ -30,15 +23,18 @@ class Review {
         if (!filter_var($id, FILTER_VALIDATE_INT)) {
             return null;
         }
-        try {
-            $pdo = self::getDB();
-            $stmt = $pdo->prepare("SELECT * FROM reviews WHERE id = ?");
-            $stmt->execute([$id]);
-            return $stmt->fetch();
-        } catch (PDOException $e) {
-            // Log error
-            throw new Exception("Error finding review");
-        }
+        return static::find($id);
+    }
+
+    public static function findByListingId($listingId) {
+        $sql = "
+            SELECT r.id, r.rating, r.comment, r.created_at, u.name as reviewer_name
+            FROM " . static::$tableName . " r
+            JOIN users u ON r.reviewer_id = u.id
+            WHERE r.listing_id = ?
+            ORDER BY r.created_at DESC
+        ";
+        return self::rawQuery($sql, [$listingId], true);
     }
 
     public static function create($data) {
@@ -51,13 +47,16 @@ class Review {
             throw new Exception("Invalid input data");
         }
 
+        $filteredData = [
+            'listing_id' => $listing_id,
+            'reviewer_id' => $reviewer_id,
+            'rating' => $rating,
+            'comment' => $comment,
+        ];
+
         try {
-            $pdo = self::getDB();
-            $sql = "INSERT INTO reviews (listing_id, reviewer_id, rating, comment) VALUES (?, ?, ?, ?)";
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute([$listing_id, $reviewer_id, $rating, $comment]);
-            return $pdo->lastInsertId();
-        } catch (PDOException $e) {
+            return parent::create($filteredData);
+        } catch (\Exception $e) {
             // Log error
             throw new Exception("Error creating review");
         }
@@ -72,12 +71,14 @@ class Review {
             throw new Exception("Invalid input data");
         }
 
+        $filteredData = [
+            'rating' => $rating,
+            'comment' => $comment,
+        ];
+
         try {
-            $pdo = self::getDB();
-            $sql = "UPDATE reviews SET rating = ?, comment = ? WHERE id = ?";
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute([$rating, $comment, $id]);
-        } catch (PDOException $e) {
+            return parent::update($id, $filteredData);
+        } catch (\Exception $e) {
             // Log error
             throw new Exception("Error updating review");
         }
@@ -88,14 +89,6 @@ class Review {
         if (!$id) {
             throw new Exception("Invalid ID");
         }
-
-        try {
-            $pdo = self::getDB();
-            $stmt = $pdo->prepare("DELETE FROM reviews WHERE id = ?");
-            $stmt->execute([$id]);
-        } catch (PDOException $e) {
-            // Log error
-            throw new Exception("Error deleting review");
-        }
+        return parent::delete($id);
     }
 }

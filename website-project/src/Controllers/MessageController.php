@@ -25,10 +25,4 @@ class MessageController extends BaseController {
             $this->jsonResponse(['message' => 'Failed to send message.'], 500);
         }
     }
-
-    private function jsonResponse($data, $statusCode = 200) {
-        http_response_code($statusCode);
-        header('Content-Type: application/json');
-        echo json_encode($data);
-    }
 }

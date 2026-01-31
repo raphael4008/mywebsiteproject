@@ -1,0 +1,393 @@
+<?php
+namespace App\Controllers;
+
+use App\Controllers\BaseController;
+use App\Config\Config;
+use App\Models\Reservation;
+use App\Models\Payment as PaymentModel;
+
+
+class PaymentController extends BaseController {
+    public function __construct() {
+        // The constructor is no longer needed for configuration initialization.
+        // API contexts and keys will be handled directly in the methods that use them
+        // to ensure they are always using the latest configuration from `Config::get()`.
+    }
+
+
+
+
+    public function processMpesaPayment($data) {
+        $listingId = $data['listing_id'] ?? null;
+        $userId = $data['user_id'] ?? null;
+        $phone = $data['phone'] ?? null;
+
+        if (!$listingId || !$userId || !$phone) {
+            return $this->jsonErrorResponse('Listing ID, User ID, and Phone Number are required.', 400);
+        }
+
+        // 1. Create a reservation using BaseModel
+        $reservationId = Reservation::create([
+            'listing_id' => $listingId,
+            'user_id' => $userId,
+            'status' => 'PENDING'
+        ]);
+
+        // 2. Create a payment record
+    $listing = \App\Models\Listing::find($listingId);
+    $amountToPay = (int) (is_array($listing) ? ($listing['rent_amount'] ?? 0) : ($listing->rent_amount ?? ($listing->price ?? 0))); // M-Pesa amount should be a whole number for this API
+
+        $paymentId = PaymentModel::create([
+            'reservation_id' => $reservationId,
+            'amount' => $amountToPay,
+            'payment_method' => 'mpesa',
+            'status' => 'pending'
+        ]);
+
+        // M-Pesa API credentials
+        $consumerKey = Config::get('MPESA_CONSUMER_KEY');
+        $consumerSecret = Config::get('MPESA_CONSUMER_SECRET');
+        $shortCode = Config::get('MPESA_SHORTCODE');
+        $passkey = Config::get('MPESA_PASSKEY');
+    $callbackUrl = Config::get('MPESA_CALLBACK_URL') . '?payment_id=' . $paymentId;
+
+        // Get access token
+        $accessToken = $this->getMpesaAccessToken($consumerKey, $consumerSecret);
+        if (!$accessToken) {
+            return $this->jsonErrorResponse('Failed to get M-Pesa access token.', 500);
+        }
+
+        // 3. Initiate STK push
+    $response = $this->initiateStkPush($accessToken, $shortCode, $passkey, $phone, $amountToPay, $callbackUrl, $paymentId);
+
+        if (isset($response->ResponseCode) && $response->ResponseCode == '0') {
+            // STK push initiated successfully, waiting for callback
+            PaymentModel::update($paymentId, ['transaction_id' => $response->CheckoutRequestID]);
+            $this->jsonResponse(['success' => true, 'mpesaResponse' => $response]);
+        } else {
+            PaymentModel::update($paymentId, ['status' => 'failed']);
+            Reservation::update($reservationId, ['status' => 'FAILED']);
+            $this->jsonErrorResponse('M-Pesa STK push failed', 500, ['mpesaResponse' => $response]);
+        }
+    }
+
+    private function _makeApiCall($url, $method = 'GET', $headers = [], $body = null) {
+        $curl = curl_init($url);
+        curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+
+        if ($method === 'POST') {
+            curl_setopt($curl, CURLOPT_POST, true);
+            if ($body) {
+                curl_setopt($curl, CURLOPT_POSTFIELDS, $body);
+            }
+        }
+
+        $response = curl_exec($curl);
+
+        if ($response === false) {
+            $error = curl_error($curl);
+            $errno = curl_errno($curl);
+            error_log("cURL error executing API call to $url: $error (Code: $errno)");
+            curl_close($curl);
+            return null;
+        }
+
+        curl_close($curl);
+        return $response;
+    }
+
+    private function getMpesaAccessToken($consumerKey, $consumerSecret) {
+        $url = 'https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials';
+        $headers = ['Authorization: Basic ' . base64_encode($consumerKey . ':' . $consumerSecret)];
+        
+        $result = $this->_makeApiCall($url, 'GET', $headers);
+
+        if ($result === null) {
+            return null;
+        }
+
+        $result = json_decode($result);
+        return $result->access_token ?? null;
+    }
+
+    private function initiateStkPush($accessToken, $shortCode, $passkey, $phone, $amount, $callbackUrl, $paymentModelId) {
+        $url = 'https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest';
+        $timestamp = date('YmdHis');
+        $password = base64_encode($shortCode . $passkey . $timestamp);
+
+        $payload = [
+            'BusinessShortCode' => $shortCode,
+            'Password' => $password,
+            'Timestamp' => $timestamp,
+            'TransactionType' => 'CustomerPayBillOnline',
+            'Amount' => $amount,
+            'PartyA' => $phone,
+            'PartyB' => $shortCode,
+            'PhoneNumber' => $phone,
+            'CallBackURL' => $callbackUrl,
+            'AccountReference' => 'HouseHunting',
+            'TransactionDesc' => 'Payment for house reservation'
+        ];
+
+        $headers = [
+            'Content-Type: application/json',
+            'Authorization: Bearer ' . $accessToken
+        ];
+
+        $response = $this->_makeApiCall($url, 'POST', $headers, json_encode($payload));
+
+        if ($response === null) {
+            return null;
+        }
+
+        return json_decode($response);
+    }
+
+    /**
+     * MPESA STK Push callback handler.
+     * Safely accepts POSTs from Safaricom and updates payment & reservation records.
+     * This endpoint should be publicly accessible (no JWT required) because Safaricom
+     * will post the result to the configured callback URL.
+     */
+    public function handleMpesaCallback($data = null) {
+        // Security check: only allow requests from Safaricom's IP addresses
+        $allowedIps = [
+            '196.201.214.200', '196.201.214.206', '196.201.213.114', '196.201.214.207',
+            '196.201.214.208', '196.201.213.44',  '196.201.212.127', '196.201.212.138',
+            '196.201.212.129', '196.201.212.136', '196.201.212.74',  '196.201.212.69'
+        ];
+        $requestIp = $_SERVER['REMOTE_ADDR'] ?? '';
+
+        // For production, you should enforce this check. For local development, you might want to bypass it.
+        $isDevelopment = (getenv('APP_ENV') === 'development');
+
+        if (!$isDevelopment && !in_array($requestIp, $allowedIps)) {
+            $logPath = __DIR__ . '/../../public/data/mpesa_callbacks.log';
+            $logMessage = sprintf(
+                "[%s] Blocked callback from unauthorized IP: %s\n",
+                date('c'),
+                $requestIp
+            );
+            @file_put_contents($logPath, $logMessage, FILE_APPEND | LOCK_EX);
+            
+            header('Content-Type: application/json', true, 403);
+            echo json_encode(['error' => 'Forbidden: IP address not allowed.']);
+            return;
+        }
+
+        // Handle input which may come via the router ($data) or raw body
+        try {
+            $raw = null;
+            if (is_array($data) && !empty($data)) {
+                $payload = $data;
+            } else {
+                $raw = file_get_contents('php://input');
+                if (empty($raw)) {
+                    header('Content-Type: application/json', true, 400);
+                    echo json_encode(['error' => 'Empty payload']);
+                    return;
+                }
+                $payload = json_decode($raw, true);
+            }
+
+            if (!is_array($payload) || empty($payload)) {
+                header('Content-Type: application/json', true, 400);
+                echo json_encode(['error' => 'Invalid JSON']);
+                return;
+            }
+
+            // Log incoming payload for reconciliation (best-effort)
+            $logPath = __DIR__ . '/../../public/data/mpesa_callbacks.log';
+            @file_put_contents($logPath, date('c') . ' ' . json_encode($payload) . PHP_EOL, FILE_APPEND | LOCK_EX);
+
+            // Safaricom wraps the callback under Body->stkCallback
+            $callback = $payload['Body']['stkCallback'] ?? null;
+            if (!$callback || !is_array($callback)) {
+                header('Content-Type: application/json', true, 400);
+                echo json_encode(['error' => 'Unexpected callback format']);
+                return;
+            }
+
+            $checkoutRequestID = $callback['CheckoutRequestID'] ?? null;
+            $resultCode = $callback['ResultCode'] ?? null;
+            $resultDesc = $callback['ResultDesc'] ?? null;
+
+            // Extract metadata items safely (Amount, MpesaReceiptNumber, PhoneNumber, etc.)
+            $metadataItems = $callback['CallbackMetadata']['Item'] ?? [];
+            $mpesaReceipt = null;
+            $amount = null;
+            $phone = null;
+
+            if (is_array($metadataItems)) {
+                foreach ($metadataItems as $item) {
+                    if (!is_array($item)) continue;
+                    $name = $item['Name'] ?? $item['name'] ?? null;
+                    $value = $item['Value'] ?? $item['value'] ?? null;
+                    if (!$name) continue;
+                    $lower = strtolower($name);
+                    if ($lower === 'mpesareceiptnumber' || stripos($name, 'receipt') !== false) {
+                        $mpesaReceipt = $value;
+                    } elseif ($lower === 'amount') {
+                        $amount = $value;
+                    } elseif ($lower === 'phonenumber') {
+                        $phone = $value;
+                    }
+                }
+            }
+
+            // Find payment record by CheckoutRequestID (we stored it previously in transaction_id)
+            $payments = [];
+            if (!empty($checkoutRequestID)) {
+                $payments = PaymentModel::where(['transaction_id' => $checkoutRequestID]);
+            }
+
+            if (!empty($payments)) {
+                $payment = $payments[0];
+                $paymentId = $payment['id'] ?? null;
+                $reservationId = $payment['reservation_id'] ?? null;
+
+                try {
+                    if ($resultCode === 0 || $resultCode === '0') {
+                        PaymentModel::update($paymentId, [
+                            'status' => 'completed',
+                            'receipt_number' => $mpesaReceipt,
+                            'amount_paid' => $amount,
+                            'phone' => $phone,
+                        ]);
+                        if ($reservationId) Reservation::update($reservationId, ['status' => 'CONFIRMED']);
+                    } else {
+                        PaymentModel::update($paymentId, ['status' => 'failed']);
+                        if ($reservationId) Reservation::update($reservationId, ['status' => 'FAILED']);
+                    }
+                } catch (\Exception $e) {
+                    error_log('Error updating payment/reservation from MPESA callback: ' . $e->getMessage());
+                    @file_put_contents($logPath, date('c') . ' ERROR updating payment: ' . $e->getMessage() . ' ' . json_encode($payload) . PHP_EOL, FILE_APPEND | LOCK_EX);
+                }
+            } else {
+                // No matching payment found; log for manual reconciliation
+                $note = "MPESA callback received but no payment found for CheckoutRequestID: $checkoutRequestID";
+                error_log($note);
+                @file_put_contents($logPath, date('c') . ' ' . $note . ' ' . json_encode($payload) . PHP_EOL, FILE_APPEND | LOCK_EX);
+            }
+
+            // Acknowledge receipt to the caller (Safaricom accepts 200 with JSON)
+            header('Content-Type: application/json');
+            echo json_encode(['ResultCode' => 0, 'ResultDesc' => 'Received']);
+            return;
+        } catch (\Throwable $t) {
+            error_log('Unhandled exception in handleMpesaCallback: ' . $t->getMessage());
+            header('Content-Type: application/json', true, 500);
+            echo json_encode(['error' => 'Internal server error']);
+            return;
+        }
+    }
+
+    public function queryMpesaTransactionStatus($data) {
+        $paymentId = $data['payment_id'] ?? null;
+
+        if (!$paymentId) {
+            return $this->jsonErrorResponse('Payment ID is required.', 400);
+        }
+
+        $payment = PaymentModel::find($paymentId);
+
+        if (!$payment) {
+            return $this->jsonErrorResponse('Payment not found.', 404);
+        }
+
+        $checkoutRequestID = $payment['transaction_id'] ?? null;
+
+        if (!$checkoutRequestID) {
+            return $this->jsonErrorResponse('Transaction has not been initiated yet or CheckoutRequestID is missing.', 422);
+        }
+
+        // Get a new access token
+        $consumerKey = Config::get('MPESA_CONSUMER_KEY');
+        $consumerSecret = Config::get('MPESA_CONSUMER_SECRET');
+        $accessToken = $this->getMpesaAccessToken($consumerKey, $consumerSecret);
+
+        if (!$accessToken) {
+            return $this->jsonErrorResponse('Failed to get M-Pesa access token.', 500);
+        }
+
+        // Query the transaction status
+        $response = $this->_queryStkStatus($accessToken, $checkoutRequestID);
+
+        if (!$response) {
+            return $this->jsonErrorResponse('Failed to query M-Pesa transaction status.', 500);
+        }
+        
+        // Process the response and update the database
+        if (isset($response->ResultCode)) {
+            $resultCode = $response->ResultCode;
+            $reservationId = $payment['reservation_id'] ?? null;
+
+            if ($resultCode == '0') {
+                PaymentModel::update($paymentId, ['status' => 'completed']);
+                if ($reservationId) Reservation::update($reservationId, ['status' => 'CONFIRMED']);
+                return $this->jsonResponse(['status' => 'completed', 'message' => $response->ResultDesc]);
+            } else {
+                // Consider other non-zero codes as failure for this context
+                PaymentModel::update($paymentId, ['status' => 'failed']);
+                if ($reservationId) Reservation::update($reservationId, ['status' => 'FAILED']);
+                 return $this->jsonResponse(['status' => 'failed', 'message' => $response->ResultDesc]);
+            }
+        } else {
+            // If ResultCode is not in the response, it's likely still pending or an error occurred
+            return $this->jsonErrorResponse('Could not determine transaction status.', 500, ['mpesaResponse' => $response]);
+        }
+    }
+
+    private function _queryStkStatus($accessToken, $checkoutRequestID) {
+        $url = 'https://sandbox.safaricom.co.ke/mpesa/stkpushquery/v1/query';
+        $shortCode = Config::get('MPESA_SHORTCODE');
+        $passkey = Config::get('MPESA_PASSKEY');
+        $timestamp = date('YmdHis');
+        $password = base64_encode($shortCode . $passkey . $timestamp);
+
+        $payload = [
+            'BusinessShortCode' => $shortCode,
+            'Password' => $password,
+            'Timestamp' => $timestamp,
+            'CheckoutRequestID' => $checkoutRequestID
+        ];
+
+        $headers = [
+            'Content-Type: application/json',
+            'Authorization: Bearer ' . $accessToken
+        ];
+
+        $response = $this->_makeApiCall($url, 'POST', $headers, json_encode($payload));
+
+        if ($response === null) {
+            return null;
+        }
+
+        return json_decode($response);
+    }
+    
+    private function _generateSecurityCredential() {
+        $initiatorPassword = Config::get('MPESA_INITIATOR_PASSWORD');
+        $certificatePath = Config::get('MPESA_CERTIFICATE_PATH'); // e.g., '/path/to/your/cert.cer'
+
+        if (!file_exists($certificatePath)) {
+            error_log("MPESA certificate not found at path: " . $certificatePath);
+            return null;
+        }
+
+        $publicKey = file_get_contents($certificatePath);
+        if (!$publicKey) {
+            error_log("Could not read MPESA certificate file.");
+            return null;
+        }
+
+        $encrypted = '';
+        if (!openssl_public_encrypt($initiatorPassword, $encrypted, $publicKey, OPENSSL_PKCS1_PADDING)) {
+            error_log("Failed to encrypt MPESA initiator password. OpenSSL error: " . openssl_error_string());
+            return null;
+        }
+
+        return base64_encode($encrypted);
+    }
+}

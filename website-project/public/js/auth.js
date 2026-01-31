@@ -1,47 +1,47 @@
-import apiClient from './apiClient.js';
+/**
+ * Auth utility module
+ */
 
-document.addEventListener('DOMContentLoaded', () => {
-    const loginForm = document.getElementById('login-form');
-    const authMessage = document.createElement('div'); // Create a message container
+// --- Helper function to decode JWT ---
+export function decodeJwt(token) {
+    try {
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
 
-    if (loginForm) {
-        loginForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            authMessage.textContent = '';
-            loginForm.parentNode.insertBefore(authMessage, loginForm.nextSibling);
-
-            try {
-                const data = await apiClient.request('/login', 'POST', { email, password });
-                localStorage.setItem('token', data.token);
-
-                // Decode token to get user role
-                const tokenPayload = JSON.parse(atob(data.token.split('.')[1]));
-                const userRole = tokenPayload.data.role;
-
-                // Handle redirect
-                const params = new URLSearchParams(window.location.search);
-                const redirectUrl = params.get('redirect');
-
-                if (redirectUrl) {
-                    window.location.href = redirectUrl;
-                    return;
-                }
-
-                if (userRole === 'admin') {
-                    window.location.href = '/admin/';
-                } else if (userRole === 'owner') {
-                    window.location.href = '/owners/';
-                } else {
-                    window.location.href = '/index.html';
-                }
-            } catch (error) {
-                console.error('Login error:', error);
-                authMessage.textContent = `Login failed: ${error.message}`;
-                authMessage.style.color = 'red';
-            }
-        });
+        return JSON.parse(jsonPayload);
+    } catch (e) {
+        console.error("Failed to decode JWT", e);
+        return null;
     }
-});
+}
+
+// --- Logout Function ---
+export function logout() {
+    localStorage.removeItem('token');
+    sessionStorage.removeItem('token');
+    localStorage.removeItem('user'); // Also remove user data
+    window.location.href = 'login.php';
+}
+
+// --- Check if user is logged in ---
+export function isLoggedIn() {
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+    return !!token;
+}
+
+// --- Get user data ---
+export function getUser() {
+    const userString = localStorage.getItem('user');
+    if (userString) {
+        try {
+            return JSON.parse(userString);
+        } catch (error) {
+            console.error('Failed to parse user data from localStorage', error);
+            return null;
+        }
+    }
+    return null;
+}

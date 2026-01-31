@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const reviewData = Object.fromEntries(formData.entries());
 
             try {
-                const response = await apiClient.request('/reviews', 'POST', reviewData);
+                const response = await apiClient.request('/users/reviews', 'POST', reviewData);
 
                 if (response.success) {
                     const newReview = document.createElement('div');

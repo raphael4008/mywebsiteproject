@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
             modalResponse.textContent = '';
 
             try {
-                const result = await apiClient.request('/marketplace/request', 'POST', data);
+                const result = await apiClient.request('/users/marketplace/request', 'POST', data);
                 modalResponse.innerHTML = `<span class="text-success">${result.message || 'Your request has been sent! A provider will contact you shortly.'}</span>`;
                 serviceRequestForm.reset();
             } catch (error) {

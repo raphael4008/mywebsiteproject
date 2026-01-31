@@ -1,4 +1,19 @@
-RewriteEngine On
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^ index.php [QSA,L]
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Route API requests to api.php
+    RewriteRule ^api/(.*)$ api.php?/$1 [L]
+
+    # If the requested resource exists as a file or directory, serve it directly
+    RewriteCond %{REQUEST_FILENAME} -f [OR]
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [L]
+
+    # Otherwise route all other requests to index.php
+    RewriteRule ^ index.php [L]
+</IfModule>
+
+# Fallback for servers without mod_rewrite: try to serve index.php
+<IfModule !mod_rewrite.c>
+    DirectoryIndex index.php
+</IfModule>

@@ -1,3 +1,5 @@
+import { BASE_URL } from './config.js';
+
 /**
  * Fetches HTML content from a URL, caches it in sessionStorage, and injects it into a target element.
  * @param {string} url The URL of the HTML partial to fetch.
@@ -6,6 +8,7 @@
  * @returns {Promise<string|null>} The HTML content as a string, or null on error.
  */
 export async function loadAndCacheHTML(url, targetElement, cacheKey) {
+    const fullUrl = `${BASE_URL}${url}`;
     const cachedHtml = sessionStorage.getItem(cacheKey);
     if (cachedHtml) {
         targetElement.innerHTML = cachedHtml;
@@ -13,8 +16,8 @@ export async function loadAndCacheHTML(url, targetElement, cacheKey) {
     }
 
     try {
-        const response = await fetch(url);
-        if (!response.ok) throw new Error(`Failed to fetch ${url}: ${response.statusText}`);
+        const response = await fetch(fullUrl);
+        if (!response.ok) throw new Error(`Failed to fetch ${fullUrl}: ${response.statusText}`);
         const fetchedHtml = await response.text();
         sessionStorage.setItem(cacheKey, fetchedHtml);
         targetElement.innerHTML = fetchedHtml;

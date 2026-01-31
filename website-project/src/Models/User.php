@@ -1,28 +1,18 @@
 <?php
 namespace App\Models;
 
-use \PDO;
+use App\Models\BaseModel; // Add use statement for BaseModel
 
-class User {
-    public static function findById($id) {
-        $pdo = \Database::getInstance();
-        $stmt = $pdo->prepare("SELECT * FROM users WHERE id = ?");
-        $stmt->execute([$id]);
-        return $stmt->fetch();
+class User extends BaseModel {
+    protected static $tableName = 'users';
+    protected static $primaryKey = 'id';
+    protected static $fillable = ['name', 'email', 'password', 'role', 'has_paid', 'created_at', 'updated_at']; // Define fillable fields for mass assignment
+
+    public static function all() {
+        return parent::all();
     }
 
-    public static function update($id, $data) {
-        $pdo = \Database::getInstance();
-        $fields = [];
-        $params = [];
-        foreach ($data as $key => $value) {
-            $fields[] = "$key = ?";
-        }
-        $params = array_values($data);
-        $params[] = $id;
-
-        $sql = "UPDATE users SET " . implode(', ', $fields) . " WHERE id = ?";
-        $stmt = $pdo->prepare($sql);
-        return $stmt->execute($params);
+    public static function countAll() {
+        return parent::countAll();
     }
 }

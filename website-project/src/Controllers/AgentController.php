@@ -1,16 +1,43 @@
 <?php
 
-class AgentController
+namespace App\Controllers;
+
+use App\Controllers\BaseController;
+use App\Models\Agent;
+use App\Helpers\Request;
+
+class AgentController extends BaseController
 {
+    public function __construct()
+    {
+        // No need to instantiate PDO here anymore, model handles it.
+    }
+
     public function getAgents()
     {
-        require_once __DIR__ . '/../config/database.php';
-        $db = Database::getInstance()->getConnection();
+        $searchTerm = Request::get('q');
+        
+        try {
+            $agents = Agent::getAgents($searchTerm);
+            $this->jsonResponse($agents);
+        } catch (\PDOException $e) {
+            $this->jsonErrorResponse('Database error: ' . $e->getMessage(), 500);
+        }
+    }
 
-        $stmt = $db->query("SELECT * FROM agents");
-        $agents = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    public function getById($id)
+    {
+        try {
+            $agent = Agent::getByIdWithDetails($id);
 
-        header('Content-Type: application/json');
-        echo json_encode($agents);
+            if (!$agent) {
+                $this->jsonErrorResponse('Agent not found', 404);
+                return;
+            }
+
+            $this->jsonResponse($agent);
+        } catch (\PDOException $e) {
+            $this->jsonErrorResponse('Database error: ' . $e->getMessage(), 500);
+        }
     }
 }

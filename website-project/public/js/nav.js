@@ -1,70 +1,73 @@
-import { setLanguage } from './lang.js';
-import { loadAndCacheHTML } from './html-loader.js';
-import apiClient from './apiClient.js';
+import { setLanguage } from './lang.js?v=4';
+import { isLoggedIn, getUser, logout } from './auth.js?v=4';
 
-document.addEventListener('DOMContentLoaded', async () => {
-    const navElement = document.querySelector('.navbar');
-    if (!navElement) return;
+export async function initNavbar() {
+    const navbarContainer = document.getElementById('navbar-container');
+    if (!navbarContainer) {
+        console.error('Navbar container not found');
+        return;
+    }
 
-    const navHtml = await loadAndCacheHTML('includes/navbar.html', navElement, 'navbarHTML');
-
-    if (navHtml) {
-        updateAuthLinks();
+    try {
+        const response = await fetch('includes/navbar.html');
+        const navbarHtml = await response.text();
+        navbarContainer.innerHTML = navbarHtml;
+        
+        // Now that the navbar is loaded, initialize its components
+        await updateAuthLinks();
         initializeThemeToggle();
         setActiveNavLink();
+        
+        // Initialize language selector listener
+        const languageSelect = document.getElementById('language-select');
+        if (languageSelect) {
+            const preferredLanguage = localStorage.getItem('preferredLanguage') || 'en';
+            languageSelect.value = preferredLanguage;
+            languageSelect.addEventListener('change', async (e) => {
+                await setLanguage(e.target.value);
+            });
+        }
+    } catch (error) {
+        console.error('Failed to load navbar:', error);
     }
-});
+}
 
 async function updateAuthLinks() {
     const authLinksContainer = document.getElementById('auth-links');
     if (!authLinksContainer) return;
 
-    const token = localStorage.getItem('token');
+    if (isLoggedIn()) {
+        const user = getUser();
+        const userName = user ? user.name || user.username : 'User';
+        authLinksContainer.innerHTML = `
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    Welcome, ${userName}
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                    <li><a class="dropdown-item" href="profile.php">Profile</a></li>
+                    <li><a class="dropdown-item" href="my-listings.php">My Listings</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="#" id="logout-button">Logout</a></li>
+                </ul>
+            </li>
+        `;
 
-    if (token) {
-        // User is logged in
-        try {
-            const user = await apiClient.request('/users/me');
-            authLinksContainer.innerHTML = `
-                <li class="nav-item">
-                    <a class="nav-link" href="profile" data-translate="Profile">Welcome, ${user.data.username}</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#" id="logout-button" data-translate="Logout">Logout</a>
-                </li>
-            `;
-            document.getElementById('logout-button').addEventListener('click', (e) => {
-                e.preventDefault();
-                localStorage.removeItem('token');
-                window.location.href = '/login';
-            });
-        } catch (error) {
-            console.error('Failed to get user profile', error);
-            authLinksContainer.innerHTML = `
-                <li class="nav-item">
-                    <a class="nav-link" href="profile" data-translate="Profile">Profile</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#" id="logout-button" data-translate="Logout">Logout</a>
-                </li>
-            `;
-            document.getElementById('logout-button').addEventListener('click', (e) => {
-                e.preventDefault();
-                localStorage.removeItem('token');
-                window.location.href = '/login';
-            });
-        }
+        document.getElementById('logout-button').addEventListener('click', (e) => {
+            e.preventDefault();
+            logout();
+        });
     } else {
         // User is logged out
         authLinksContainer.innerHTML = `
-            <li class="nav-item"><a class="nav-link" href="login" data-translate="Login">Login</a></li>
-            <li class="nav-item"><a class="nav-link" href="register" data-translate="Register">Register</a></li>
+            <li class="nav-item"><a class="nav-link" href="login.php">Login</a></li>
+            <li class="nav-item"><a class="nav-link btn btn-primary" href="register.php">Register</a></li>
         `;
     }
 
     // Re-apply language to the newly added elements
     const preferredLanguage = localStorage.getItem('preferredLanguage') || 'en';
-    setLanguage(preferredLanguage);
+    await setLanguage(preferredLanguage, authLinksContainer);
 }
 
 function initializeThemeToggle() {
@@ -91,7 +94,6 @@ function initializeThemeToggle() {
         }
     });
 
-    // Set initial theme from storage
     const savedTheme = localStorage.getItem('theme') || 'light';
     setTheme(savedTheme);
 }
@@ -101,9 +103,14 @@ function setActiveNavLink() {
     const navLinks = document.querySelectorAll('.navbar-nav .nav-link, .navbar-nav .dropdown-item');
 
     navLinks.forEach(link => {
-        const linkPage = link.getAttribute('href');
+        const linkHref = link.getAttribute('href');
+        if (!linkHref) return;
 
-        if ((currentPage === '/' && linkPage === '/') || (linkPage !== '/' && currentPage.endsWith(linkPage))) {
+        // Normalize paths for comparison
+        const absoluteLink = new URL(linkHref, window.location.origin).pathname;
+        const absolutePage = currentPage.endsWith('/') ? currentPage + 'index.php' : currentPage;
+
+        if (absoluteLink === window.location.origin + absolutePage) {
             link.classList.add('active');
             const dropdown = link.closest('.dropdown');
             if (dropdown) {

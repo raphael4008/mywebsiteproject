@@ -58,7 +58,9 @@ export default {
         async fetchListings() {
             this.isLoading = true;
             try {
-                this.listings = await apiClient.request('/admin/listings');
+                // Backend exposes listings at GET /listings (returns { data: [...], total })
+                const resp = await apiClient.get('/listings');
+                this.listings = resp && resp.data ? resp.data : resp;
             } catch (err) {
                 this.error = 'Failed to load listings.';
             } finally {
@@ -67,7 +69,8 @@ export default {
         },
         async approveListing(id) {
             try {
-                await apiClient.request(`/admin/listings/${id}/approve`, 'POST');
+                // Server exposes verification at POST /listings/:id/verify
+                await apiClient.post(`/listings/${id}/verify`);
                 await this.fetchListings(); // Refresh list
             } catch (err) {
                 this.error = 'Failed to approve listing.';
@@ -76,7 +79,7 @@ export default {
         async deleteListing(id) {
             if (!confirm('Are you sure you want to permanently delete this listing?')) return;
             try {
-                await apiClient.request(`/admin/listings/${id}`, 'DELETE');
+                await apiClient.request(`/listings/${id}`, { method: 'DELETE' });
                 await this.fetchListings(); // Refresh list
             } catch (err) {
                 this.error = 'Failed to delete listing.';

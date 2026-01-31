@@ -3,23 +3,16 @@ namespace App\Models;
 
 use \PDO;
 use \Exception;
-use Database;
+use App\Models\BaseModel; // Add use statement for BaseModel
 
-class Transport {
-    private static function getDB() {
-        try {
-            return \Database::getInstance();
-        } catch (PDOException $e) {
-            // In a real application, you would log this error
-            throw new Exception("Database connection failed");
-        }
-    }
+class Transport extends BaseModel {
+    protected static $tableName = 'transport_requests';
+    protected static $primaryKey = 'id';
+    protected static $fillable = ['name', 'phone', 'email', 'pickup_address', 'dropoff_address', 'moving_date', 'items', 'created_at', 'updated_at'];
 
     public static function getAll() {
         try {
-            $pdo = self::getDB();
-            $stmt = $pdo->query("SELECT * FROM transport_requests ORDER BY created_at DESC");
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            return static::rawQuery("SELECT * FROM " . static::$tableName . " ORDER BY created_at DESC", [], true, PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
             // Log error
             throw new Exception("Error fetching transport requests");
@@ -39,23 +32,19 @@ class Transport {
             throw new Exception("Invalid input data");
         }
 
+        $filteredData = [
+            'name' => $name,
+            'phone' => $phone,
+            'email' => $email,
+            'pickup_address' => $pickup_address,
+            'dropoff_address' => $dropoff_address,
+            'moving_date' => $moving_date,
+            'items' => $items,
+        ];
+
         try {
-            $pdo = self::getDB();
-            $stmt = $pdo->prepare(
-                "INSERT INTO transport_requests (name, phone, email, pickup_address, dropoff_address, moving_date, items) 
-                VALUES (:name, :phone, :email, :pickup_address, :dropoff_address, :moving_date, :items)"
-            );
-            
-            return $stmt->execute([
-                ':name' => $name,
-                ':phone' => $phone,
-                ':email' => $email,
-                ':pickup_address' => $pickup_address,
-                ':dropoff_address' => $dropoff_address,
-                ':moving_date' => $moving_date,
-                ':items' => $items,
-            ]);
-        } catch (PDOException $e) {
+            return parent::create($filteredData);
+            } catch (\Exception $e) {
             // Log error
             throw new Exception("Error creating transport request");
         }

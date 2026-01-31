@@ -1,99 +1,49 @@
 import apiClient from './apiClient.js';
 
-function renderStars(rating) {
-    let starsHtml = '';
-    for (let i = 1; i <= 5; i++) {
-        starsHtml += `<span class="star ${i <= rating ? 'selected' : ''}">★</span>`;
-    }
-    return `<div class="star-rating-display">${starsHtml}</div>`;
-}
+async function loadReviews() {
+    // Support both homepage and features page containers
+    const homeContainer = document.getElementById('reviews-list');
+    const featuresContainer = document.getElementById('reviewsList');
+    const container = homeContainer || featuresContainer;
 
-async function renderReviews() {
-    const container = document.getElementById('reviewsList');
-    if (!container) return; // Added check for container existence
+    if (!container) return;
 
     try {
         const reviews = await apiClient.request('/reviews');
         
-        if (!reviews || reviews.length === 0) {
-            container.innerHTML = '<p>No reviews have been submitted yet.</p>';
+        // If on homepage, limit to 3 reviews
+        const displayReviews = homeContainer ? reviews.slice(0, 3) : reviews;
+
+        if (displayReviews.length === 0) {
+            container.innerHTML = '<div class="col-12 text-center"><p class="text-muted">No reviews yet.</p></div>';
             return;
         }
 
-        container.innerHTML = reviews.map(r => `
-            <div class="testimonial-card">
-                ${renderStars(r.rating)}
-                <p>"${r.comment}"</p>
-                <span>- ${r.reviewer}, ${new Date(r.created_at).toLocaleDateString()}</span>
+        container.innerHTML = displayReviews.map(review => `
+            <div class="${homeContainer ? 'col-md-4' : 'testimonial-card'}" ${homeContainer ? 'data-aos="fade-up"' : ''}>
+                <div class="card h-100 border-0 shadow-sm p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="flex-shrink-0">
+                            <div class="bg-light text-primary rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 48px; height: 48px; font-size: 1.2rem;">
+                                ${review.reviewer_name ? review.reviewer_name.charAt(0).toUpperCase() : 'A'}
+                            </div>
+                        </div>
+                        <div class="ms-3">
+                            <h6 class="mb-0 fw-bold">${review.reviewer_name || 'Anonymous'}</h6>
+                            <div class="text-warning small">
+                                ${Array(5).fill(0).map((_, i) => i < review.rating ? '<i class="fas fa-star"></i>' : '<i class="far fa-star"></i>').join('')}
+                            </div>
+                        </div>
+                    </div>
+                    <p class="card-text text-muted small fst-italic">"${review.comment}"</p>
+                </div>
             </div>
         `).join('');
+
     } catch (error) {
-        console.error('Error fetching reviews:', error);
-        container.innerHTML = '<p>Could not load reviews. Please try again later.</p>';
+        console.error('Error loading reviews:', error);
+        container.innerHTML = '<div class="col-12 text-center"><p class="text-danger">Unable to load reviews.</p></div>';
     }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    renderReviews();
-
-    const reviewForm = document.getElementById('reviewForm');
-    const responseContainer = document.getElementById('review-response');
-
-    // Star rating logic
-    const stars = document.querySelectorAll('.star-rating .star');
-    const ratingInput = document.getElementById('rating');
-
-    stars.forEach(star => {
-        star.addEventListener('click', () => {
-            ratingInput.value = star.dataset.value;
-            stars.forEach(s => {
-                s.classList.toggle('selected', s.dataset.value <= ratingInput.value);
-            });
-        });
-
-        star.addEventListener('mouseover', () => {
-            stars.forEach(s => {
-                s.style.color = s.dataset.value <= star.dataset.value ? '#ffc107' : '#ccc';
-            });
-        });
-
-        star.addEventListener('mouseout', () => {
-            stars.forEach(s => {
-                s.style.color = s.dataset.value <= ratingInput.value ? '#ffc107' : '#ccc';
-            });
-        });
-    });
-
-    if (reviewForm) {
-        reviewForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const submitButton = reviewForm.querySelector('button[type="submit"]');
-            const formData = new FormData(reviewForm);
-            const data = {
-                reviewer: formData.get('reviewerName'),
-                comment: formData.get('comment'),
-                rating: formData.get('rating'),
-            };
-
-            submitButton.disabled = true;
-            submitButton.textContent = 'Submitting...';
-            responseContainer.textContent = '';
-
-            try {
-                const result = await apiClient.request('/reviews', 'POST', data);
-                responseContainer.innerHTML = `<span class="text-success">${result.message || 'Thank you for your review!'}</span>`;
-                // Reset stars
-                ratingInput.value = 0;
-                stars.forEach(s => s.classList.remove('selected'));
-
-                reviewForm.reset();
-                renderReviews(); // Re-render reviews to show the new one
-            } catch (error) {
-                responseContainer.innerHTML = `<span class="text-danger">Error: ${error.message}</span>`;
-            } finally {
-                submitButton.disabled = false;
-                submitButton.textContent = 'Submit Review';
-            }
-        });
-    }
-});
+document.addEventListener('DOMContentLoaded', loadReviews);

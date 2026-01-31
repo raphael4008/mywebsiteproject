@@ -1,89 +1,131 @@
 <?php
 namespace App\Models;
 
-use \PDO;
-use \PDOException;
+use App\Config\DatabaseConnection;
 
-class Image {
-    private static $tableName = 'images';
+class Image extends BaseModel {
+    protected static $tableName = 'images';
+    // Keep fillable flexible but we'll use a custom create to adapt to differing schemas
+    protected static $fillable = ['listing_id', 'path', 'image_path', 'is_main', 'is_primary', 'created_at'];
 
-    /**
-     * Creates a new image record in the database.
-     *
-     * @param int $listingId The ID of the listing this image belongs to.
-     * @param string $imagePath The path to the image file.
-     * @param bool $isPrimary Whether this is the primary image for the listing.
-     * @param int $displayOrder The display order of the image.
-     * @return int|false The ID of the newly created image, or false on failure.
-     */
-    public static function create(int $listingId, string $imagePath, bool $isPrimary = false, int $displayOrder = 0) {
-        try {
-            $pdo = \Database::getInstance();
-            $stmt = $pdo->prepare("INSERT INTO " . self::$tableName . " (listing_id, image_path, is_primary, display_order) VALUES (:listing_id, :image_path, :is_primary, :display_order)");
-            $stmt->bindParam(':listing_id', $listingId, PDO::PARAM_INT);
-            $stmt->bindParam(':image_path', $imagePath, PDO::PARAM_STR);
-            $stmt->bindParam(':is_primary', $isPrimary, PDO::PARAM_BOOL);
-            $stmt->bindParam(':display_order', $displayOrder, PDO::PARAM_INT);
-            $stmt->execute();
-            return $pdo->lastInsertId();
-        } catch (PDOException $e) {
-            error_log("Error creating image: " . $e->getMessage());
-            return false;
-        }
-    }
-
-    /**
-     * Finds images by listing ID.
-     *
-     * @param int $listingId The ID of the listing to find images for.
-     * @return array An array of image records.
-     */
     public static function findByListingId(int $listingId): array {
-        try {
-            $pdo = \Database::getInstance();
-            $stmt = $pdo->prepare("SELECT * FROM " . self::$tableName . " WHERE listing_id = :listing_id ORDER BY display_order ASC, is_primary DESC");
-            $stmt->bindParam(':listing_id', $listingId, PDO::PARAM_INT);
-            $stmt->execute();
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        } catch (PDOException $e) {
-            error_log("Error finding images by listing ID: " . $e->getMessage());
-            return [];
+        $pdo = self::getPdo();
+        // Determine available columns to avoid referencing missing ones
+        $colStmt = $pdo->query("SHOW COLUMNS FROM images");
+        $columns = $colStmt->fetchAll(\PDO::FETCH_COLUMN);
+
+        if (in_array('path', $columns) && in_array('image_path', $columns)) {
+            $pathExpr = "COALESCE(path, image_path) AS path";
+        } elseif (in_array('path', $columns)) {
+            $pathExpr = "path AS path";
+        } elseif (in_array('image_path', $columns)) {
+            $pathExpr = "image_path AS path";
+        } else {
+            $pathExpr = "'' AS path";
         }
+
+        if (in_array('is_main', $columns) && in_array('is_primary', $columns)) {
+            $mainExpr = "COALESCE(is_main, is_primary) AS is_main";
+        } elseif (in_array('is_main', $columns)) {
+            $mainExpr = "is_main AS is_main";
+        } elseif (in_array('is_primary', $columns)) {
+            $mainExpr = "is_primary AS is_main";
+        } else {
+            $mainExpr = "0 AS is_main";
+        }
+
+        $sql = "SELECT id, listing_id, $pathExpr, $mainExpr, created_at FROM images WHERE listing_id = ? ORDER BY id ASC";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([$listingId]);
+        $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        // Normalize path to include images/ prefix when storing simple filenames
+        foreach ($rows as &$r) {
+            if (!empty($r['path']) && strpos($r['path'], '/') === false) {
+                $r['path'] = 'images/' . $r['path'];
+            }
+        }
+        return $rows;
+    }
+
+    public static function findByListingIds(array $listingIds): array {
+        if (empty($listingIds)) return [];
+        $placeholders = implode(',', array_fill(0, count($listingIds), '?'));
+        $pdo = self::getPdo();
+        // Determine columns like above to avoid referencing non-existent columns
+        $colStmt = $pdo->query("SHOW COLUMNS FROM images");
+        $columns = $colStmt->fetchAll(\PDO::FETCH_COLUMN);
+
+        if (in_array('path', $columns) && in_array('image_path', $columns)) {
+            $pathExpr = "COALESCE(path, image_path) AS path";
+        } elseif (in_array('path', $columns)) {
+            $pathExpr = "path AS path";
+        } elseif (in_array('image_path', $columns)) {
+            $pathExpr = "image_path AS path";
+        } else {
+            $pathExpr = "'' AS path";
+        }
+
+        if (in_array('is_main', $columns) && in_array('is_primary', $columns)) {
+            $mainExpr = "COALESCE(is_main, is_primary) AS is_main";
+        } elseif (in_array('is_main', $columns)) {
+            $mainExpr = "is_main AS is_main";
+        } elseif (in_array('is_primary', $columns)) {
+            $mainExpr = "is_primary AS is_main";
+        } else {
+            $mainExpr = "0 AS is_main";
+        }
+
+        $sql = "SELECT id, listing_id, $pathExpr, $mainExpr, created_at FROM images WHERE listing_id IN ($placeholders) ORDER BY listing_id, id ASC";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($listingIds);
+        $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        foreach ($rows as &$r) {
+            if (!empty($r['path']) && strpos($r['path'], '/') === false) {
+                $r['path'] = 'images/' . $r['path'];
+            }
+        }
+        return $rows;
     }
 
     /**
-     * Deletes an image by its ID.
-     *
-     * @param int $imageId The ID of the image to delete.
-     * @return bool True on success, false on failure.
+     * Custom create that adapts to either 'path' or 'image_path' column in the DB.
      */
-    public static function delete(int $imageId): bool {
-        try {
-            $pdo = \Database::getInstance();
-            $stmt = $pdo->prepare("DELETE FROM " . self::$tableName . " WHERE id = :id");
-            $stmt->bindParam(':id', $imageId, PDO::PARAM_INT);
-            return $stmt->execute();
-        } catch (PDOException $e) {
-            error_log("Error deleting image: " . $e->getMessage());
-            return false;
+    public static function create(array $data) {
+        $pdo = self::getPdo();
+
+        // Determine which column exists
+        $colStmt = $pdo->query("SHOW COLUMNS FROM images");
+        $columns = $colStmt->fetchAll(\PDO::FETCH_COLUMN);
+
+        $usePath = in_array('path', $columns);
+        $useImagePath = in_array('image_path', $columns);
+
+        $insertCols = ['listing_id'];
+        $values = [$data['listing_id']];
+
+        if ($usePath) {
+            $insertCols[] = 'path';
+            $values[] = $data['path'] ?? $data['image_path'] ?? '';
+        } elseif ($useImagePath) {
+            $insertCols[] = 'image_path';
+            $values[] = $data['image_path'] ?? $data['path'] ?? '';
         }
+
+        $placeholders = implode(',', array_fill(0, count($insertCols), '?'));
+        $cols = implode(',', $insertCols);
+
+        $sql = "INSERT INTO images ($cols) VALUES ($placeholders)";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($values);
+
+        return $pdo->lastInsertId();
     }
 
-    /**
-     * Deletes all images for a given listing.
-     *
-     * @param int $listingId The ID of the listing whose images to delete.
-     * @return bool True on success, false on failure.
-     */
     public static function deleteByListingId(int $listingId): bool {
-        try {
-            $pdo = \Database::getInstance();
-            $stmt = $pdo->prepare("DELETE FROM " . self::$tableName . " WHERE listing_id = :listing_id");
-            $stmt->bindParam(':listing_id', $listingId, PDO::PARAM_INT);
-            return $stmt->execute();
-        } catch (PDOException $e) {
-            error_log("Error deleting images by listing ID: " . $e->getMessage());
-            return false;
+        $images = self::findByListingId($listingId);
+        foreach ($images as $image) {
+            parent::delete($image['id']);
         }
+        return true;
     }
 }

@@ -12,14 +12,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
+            // Updated to use Bootstrap grid and new card styling
             neighborhoodList.innerHTML = neighborhoods.map(neighborhood => `
-                <a href="neighborhood.html?name=${neighborhood.name}" class="listing-card">
-                    <img src="${neighborhood.image}" alt="${neighborhood.name}">
-                    <div class="card-body">
-                        <div class="title">${neighborhood.name}</div>
-                        <div class="meta">${neighborhood.city}</div>
-                    </div>
-                </a>
+                <div class="col-md-4 col-sm-6" data-aos="fade-up">
+                    <a href="neighborhood.html?name=${encodeURIComponent(neighborhood.name)}" class="text-decoration-none">
+                        <div class="neighborhood-card shadow-sm">
+                            <img src="${neighborhood.image || 'css/placeholder.jpg'}" alt="${neighborhood.name}">
+                            <div class="neighborhood-overlay">
+                                <h3 class="mb-1 fw-bold text-white">${neighborhood.name}</h3>
+                                <p class="mb-0 text-white-50"><i class="fas fa-map-marker-alt me-1"></i> ${neighborhood.city}</p>
+                            </div>
+                        </div>
+                    </a>
+                </div>
             `).join('');
         } catch (error) {
             console.error('Error fetching neighborhoods:', error);

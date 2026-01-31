@@ -94,7 +94,7 @@ a:hover {
 
 /* Hero Section */
 .hero-section {
-    background: url('../images/hero-bg.jpg') no-repeat center center/cover; /* Placeholder image */
+    background: url('../images/a.jpg') no-repeat center center/cover; /* Placeholder image */
     color: #fff;
     text-align: center;
     padding: 150px 20px;
@@ -356,7 +356,7 @@ a:hover {
 
 /* Call to Action Section */
 .cta-section {
-    background: url('../images/cta-bg.jpg') no-repeat center center/cover; /* Placeholder image */
+    background: url('../images/b.jpg') no-repeat center center/cover; /* Placeholder image */
     padding: 100px 20px;
     text-align: center;
     color: #fff;

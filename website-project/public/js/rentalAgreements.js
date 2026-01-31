@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const agreementData = Object.fromEntries(formData.entries());
 
             try {
-                const response = await apiClient.request('/agreements', 'POST', agreementData);
+                const response = await apiClient.request('/users/agreements', 'POST', agreementData);
 
                 if (response.success) {
                     alert('Rental agreement generated successfully!');

@@ -25,18 +25,18 @@ const router = VueRouter.createRouter({
     routes,
 });
 
-router.beforeEach((to, from, next) => {
-    const loggedIn = localStorage.getItem('token');
-    const tokenPayload = loggedIn ? JSON.parse(atob(loggedIn.split('.')[1])) : null;
-    const userRole = tokenPayload ? tokenPayload.data.role : null;
+// router.beforeEach((to, from, next) => {
+//     const loggedIn = localStorage.getItem('token');
+//     const tokenPayload = loggedIn ? JSON.parse(atob(loggedIn.split('.')[1])) : null;
+//     const userRole = tokenPayload ? tokenPayload.data.role : null;
 
-    if (to.matched.some(record => record.meta.requiresAuth) && userRole !== 'admin') {
-        next({ name: 'Login' });
-    } else if (to.name === 'Login' && userRole === 'admin') {
-        next({ name: 'AdminDashboard' });
-    } else {
-        next();
-    }
-});
+//     if (to.matched.some(record => record.meta.requiresAuth) && userRole !== 'admin') {
+//         next({ name: 'Login' });
+//     } else if (to.name === 'Login' && userRole === 'admin') {
+//         next({ name: 'AdminDashboard' });
+//     } else {
+//         next();
+//     }
+// });
 
 export default router;

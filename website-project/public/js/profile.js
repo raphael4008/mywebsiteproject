@@ -6,16 +6,22 @@ document.addEventListener('DOMContentLoaded', () => {
     loadReservedListings();
 });
 
-async function loadUserProfile() {
+function loadUserProfile() {
     const userNameEl = document.getElementById('userName');
     const userEmailEl = document.getElementById('userEmail');
 
     if (!userNameEl || !userEmailEl) return;
 
     try {
-        const user = await apiClient.request('/users/me');
-        userNameEl.textContent = user.name;
-        userEmailEl.textContent = user.email;
+        const userString = localStorage.getItem('user');
+        if (userString) {
+            const user = JSON.parse(userString);
+            userNameEl.textContent = user.name || user.username || 'User';
+            userEmailEl.textContent = user.email || '';
+        } else {
+            // This case should ideally not be reached if the user is on their profile page
+            throw new Error('User data not found in local storage.');
+        }
     } catch (error) {
         console.error('Failed to load user profile:', error);
         document.getElementById('userInfo').innerHTML = `<p class="text-danger">Could not load profile information.</p>`;
@@ -41,7 +47,7 @@ async function loadSavedSearches() {
                 <div class="card mb-2">
                     <div class="card-body d-flex justify-content-between align-items-center">
                         <span>${criteriaText}</span>
-                        <a href="/search.html?${params}" class="btn btn-sm btn-outline-primary">Run Search</a>
+                        <a href="search.html?${params}" class="btn btn-sm btn-outline-primary">Run Search</a>
                     </div>
                 </div>
             `;
@@ -67,6 +73,8 @@ async function loadReservedListings() {
 
         container.innerHTML = reservations.map(res => {
             const listing = res.listing; // Assuming the backend returns the nested listing object
+            if (!listing) return ''; // Skip if listing data is missing
+
             const imageUrl = listing.images && listing.images.length > 0 ? listing.images[0] : 'css/placeholder.jpg';
             return `
                 <div class="card mb-3">
@@ -77,8 +85,11 @@ async function loadReservedListings() {
                         <div class="col-md-9">
                             <div class="card-body">
                                 <h5 class="card-title">${listing.title}</h5>
-                                <p class="card-text"><small class="text-muted">Reserved on: ${new Date(res.created_at).toLocaleDateString()}</small></p>
-                                <a href="/listing.html?id=${listing.id}" class="btn btn-sm btn-primary">View Listing</a>
+                                <p class="card-text">
+                                    <small class="text-muted">Reserved on: ${new Date(res.created_at).toLocaleDateString()}</small>
+                                    <span class="badge bg-${res.status === 'confirmed' ? 'success' : 'warning'} ms-2">${res.status || 'Pending'}</span>
+                                </p>
+                                <a href="listings.php?id=${listing.id}" class="btn btn-sm btn-primary">View Listing</a>
                             </div>
                         </div>
                     </div>

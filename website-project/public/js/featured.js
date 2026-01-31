@@ -7,7 +7,7 @@ async function renderFeaturedHomes(filters = {}) {
 
     try {
         const queryParams = new URLSearchParams(filters).toString();
-        const featuredHomes = await apiClient.request(`/listings?limit=4&${queryParams}`);
+        const featuredHomes = await apiClient.request(`/listings/search?limit=4&${queryParams}`);
 
         if (!featuredHomes.data || featuredHomes.data.length === 0) {
             grid.innerHTML = '<p>No featured homes available at the moment.</p>';
@@ -26,7 +26,7 @@ async function renderFeaturedHomes(filters = {}) {
                         ${item.furnished ? '<span class="badge bg-info">Furnished</span>' : ''}
                         ${item.verified ? '<span class="badge bg-success">Verified</span>' : ''}
                     </div>
-                   <a href="listing.html?id=${item.id}" class="btn btn-primary mt-3 w-100">View Details</a>
+                   <a href="listings.php?id=${item.id}" class="btn btn-primary mt-3 w-100">View Details</a>
                 </div>
             </div>
         `).join('');

@@ -29,9 +29,10 @@ To get started, you will need to have a web server with PHP and MySQL installed.
 1. Clone the repository.
 2. Create a database and import the `database/schema.sql` file.
 3. Rename the `.env.example` file to `.env` and update the database credentials and OpenAI API key.
-4. Run `composer install` to install the PHP dependencies.
-5. Run `npm install` to install the JavaScript dependencies.
-6. Run the application using a web server.
+4. Make sure you have PHP 8.2.0 or higher installed.
+5. Run `composer install` to install the PHP dependencies.
+6. Run `npm install` to install the JavaScript dependencies.
+7. Run the application using a web server.
 
 ## Usage
 
