@@ -65,6 +65,7 @@ class AISearchService {
         $neighborhoods = implode(', ', $context['neighborhoods'] ?? []);
         $htypes = implode(', ', $context['htypes'] ?? []);
         $styles = implode(', ', $context['styles'] ?? []);
+        $amenities = implode(', ', $context['amenities'] ?? []);
 
         return <<<PROMPT
 You are a highly intelligent assistant for a real estate website. Your task is to extract search parameters from a user's natural language query.
@@ -78,7 +79,7 @@ The possible parameters are:
 - "style": string (must be one of: {$styles})
 - "furnished": boolean
 - "verified": boolean
-- "amenities": array of strings
+- "amenities": array of strings (must be one of: {$amenities})
 
 Analyze the user's query and construct a valid JSON object. If a parameter is not mentioned, do not include it in the JSON object.
 For example, if the user query is "a furnished 2 bedroom apartment in Kilimani with a gym for less than 50000", the JSON output should be:

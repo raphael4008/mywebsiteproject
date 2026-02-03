@@ -1,46 +1,21 @@
 <?php
-
 namespace App\Controllers;
 
-use App\Config\Config;
-use App\Helpers\Request;
-use OpenAI;
+use App\Services\ChatbotService;
 
-class AIController extends BaseController
-{
-    /**
-     * Handles the AI chat requests.
-     */
-    public function handleChat()
-    {
-    $data = Request::all();
-        $userMessage = $data['message'] ?? '';
+class AIController extends BaseController {
+    public function handleChat() {
+        $data = json_decode(file_get_contents('php://input'), true);
+        $message = $data['message'] ?? '';
 
-        if (empty($userMessage)) {
-            $this->jsonErrorResponse('Please provide a message.', 400);
+        if (empty($message)) {
+            $this->jsonErrorResponse('Message is empty.', 400);
             return;
         }
 
-        try {
-            $client = OpenAI::client(Config::get('OPENAI_API_KEY'));
+        $chatbotService = new ChatbotService();
+        $response = $chatbotService->getReply($message);
 
-            $systemPrompt = "You are a helpful assistant for a real estate website called HouseHunting. You can help users find properties, answer questions about the website, and provide general real estate advice. Be friendly and conversational.";
-
-            $response = $client->chat()->create([
-                'model' => 'gpt-3.5-turbo',
-                'messages' => [
-                    ['role' => 'system', 'content' => $systemPrompt],
-                    ['role' => 'user', 'content' => $userMessage],
-                ],
-            ]);
-
-            $reply = $response->choices[0]->message->content ?? '';
-
-            $this->jsonResponse(['reply' => $reply]);
-        } catch (\Exception $e) {
-            // Log the error
-            error_log($e->getMessage());
-            $this->jsonErrorResponse('An error occurred while processing your request.', 500);
-        }
+        $this->jsonResponse(['reply' => $response]);
     }
 }

@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login – HouseHunter</title>
+    <script>
+        window.basePath = "<?php echo rtrim(dirname($_SERVER['SCRIPT_NAME']), '/'); ?>";
+    </script>
     <link rel="stylesheet" href="css/styles.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -42,7 +45,7 @@
     </main>
 
     <div id="footer-container"></div>
-
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="js/main.js" type="module"></script>
     <script type="module">
         import apiClient from './js/apiClient.js';

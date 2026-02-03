@@ -5,6 +5,7 @@ module.exports = {
   entry: {
     bundle: [
       './public/js/main.js',
+      './public/js/home.js',
       './public/js/listing.js',
       './public/js/neighborhoods.js',
       './public/js/reviews.js',
@@ -40,7 +41,7 @@ module.exports = {
         test: /\.(png|jpg|jpeg|gif|svg|webp)$/i,
         type: 'asset/resource',
         generator: {
-          filename: 'images/[name].[ext]',
+          filename: 'images/[name][ext]',
         },
         use: [
           {

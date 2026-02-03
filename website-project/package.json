@@ -6,7 +6,8 @@
   "scripts": {
     "test": "phpunit",
     "fix": "phpcbf",
-    "build": "webpack --config webpack.config.js"  },
+    "build": "webpack --config webpack.config.js"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
@@ -21,5 +22,9 @@
     "mini-css-extract-plugin": "^2.7.6",
     "webpack": "^5.89.0",
     "webpack-cli": "^5.1.4"
+  },
+  "dependencies": {
+    "@popperjs/core": "^2.11.8",
+    "bootstrap": "^5.3.8"
   }
 }

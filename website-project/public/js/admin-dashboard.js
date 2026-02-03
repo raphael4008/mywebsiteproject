@@ -29,27 +29,27 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function checkAuth() {
-    const token = localStorage.getItem('token');
-    const userString = localStorage.getItem('user');
+    // const token = localStorage.getItem('token');
+    // const userString = localStorage.getItem('user');
 
-    if (!token || !userString) {
-        window.location.href = '../login.php?redirect=admin/index.php';
-        return;
-    }
+    // if (!token || !userString) {
+    //     window.location.href = '../login.php?redirect=admin/index.php';
+    //     return;
+    // }
 
-    try {
-        const user = JSON.parse(userString);
-        if (user.role !== 'admin') {
-            console.warn('User is not an admin. Redirecting.');
-            window.location.href = '../login.php?redirect=admin/index.php';
-            return;
-        }
-        AppState.user = user; // Store user data in AppState
-        // Potentially display admin name here if there's an element for it
-    } catch (error) {
-        console.error('Failed to parse user data, redirecting to login.', error);
-        window.location.href = '../login.html?redirect=admin/index.html';
-    }
+    // try {
+    //     const user = JSON.parse(userString);
+    //     if (user.role !== 'admin') {
+    //         console.warn('User is not an admin. Redirecting.');
+    //         window.location.href = '../login.php?redirect=admin/index.php';
+    //         return;
+    //     }
+    //     AppState.user = user; // Store user data in AppState
+    //     // Potentially display admin name here if there's an element for it
+    // } catch (error) {
+    //     console.error('Failed to parse user data, redirecting to login.', error);
+    //     window.location.href = '../login.html?redirect=admin/index.html';
+    // }
 }
 
 
@@ -120,7 +120,7 @@ async function loadReservations() {
 
 async function loadAmenities() {
     await loadContentIntoContainer('amenitiesTable', async () => {
-        return await apiClient.request('/amenities');
+        return await apiClient.request('/admin/amenities');
     }, (amenities) => {
         const amenitiesHtml = amenities.map(amenity => `
             <tr>
@@ -143,7 +143,7 @@ async function loadAmenities() {
 
 async function addAmenity(name) {
     try {
-        await apiClient.request('/amenities', 'POST', { name });
+        await apiClient.request('/admin/amenities', 'POST', { name });
         showNotification('Amenity added!', 'success');
         loadAmenities();
     } catch (error) {
@@ -154,7 +154,7 @@ async function addAmenity(name) {
 async function deleteAmenity(id) {
     if (!confirm('Are you sure you want to delete this amenity?')) return;
     try {
-        await apiClient.request(`/amenities/${id}`, 'DELETE');
+        await apiClient.request(`/admin/amenities/${id}`, 'DELETE');
         showNotification('Amenity deleted!', 'success');
         loadAmenities();
     } catch (error) {
@@ -190,12 +190,12 @@ async function loadStats() {
 
 async function loadListings() {
     await loadContentIntoContainer('adminListingsTable', async () => {
-        return await apiClient.request('/listings');
+        return await apiClient.request('/admin/listings');
     }, (listings) => {
         const listingsHtml = listings.map(listing => `
             <tr>
                 <td class="ps-4 fw-bold">${listing.title}</td>
-                <td>${listing.owner_id || 'Unknown'}</td>
+                <td>${listing.owner_name || 'Unknown'}</td>
                 <td>
                     <span class="badge bg-${listing.verified ? 'success' : 'warning'}">
                         ${listing.verified ? 'Verified' : 'Pending'}
@@ -227,7 +227,7 @@ async function verifyListing(id) {
     // A proper confirm modal would be better, but for now, window.confirm is used.
     if(!confirm('Verify this listing?')) return;
     try {
-        await apiClient.request(`/listings/${id}/verify`, 'POST');
+        await apiClient.request(`/admin/listings/verify/${id}`, 'POST');
         showNotification('Listing verified!', 'success');
         loadListings();
     } catch (error) {
@@ -238,7 +238,7 @@ async function verifyListing(id) {
 async function deleteListing(id) {
     if(!confirm('Are you sure you want to delete this listing?')) return;
     try {
-        await apiClient.request(`/listings/${id}`, 'DELETE');
+        await apiClient.request(`/admin/listings/${id}`, 'DELETE');
         showNotification('Listing deleted!', 'success');
         loadListings();
     } catch (error) {

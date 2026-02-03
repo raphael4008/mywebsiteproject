@@ -40,8 +40,12 @@ class Image extends BaseModel {
         $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
         // Normalize path to include images/ prefix when storing simple filenames
         foreach ($rows as &$r) {
-            if (!empty($r['path']) && strpos($r['path'], '/') === false) {
-                $r['path'] = 'images/' . $r['path'];
+            if (!empty($r['path'])) {
+                // Fix potential malformed paths like 'a..jpg'
+                $r['path'] = str_replace('..', '.', $r['path']);
+                if (strpos($r['path'], '/') === false) {
+                    $r['path'] = 'images/' . $r['path'];
+                }
             }
         }
         return $rows;
@@ -80,8 +84,12 @@ class Image extends BaseModel {
         $stmt->execute($listingIds);
         $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
         foreach ($rows as &$r) {
-            if (!empty($r['path']) && strpos($r['path'], '/') === false) {
-                $r['path'] = 'images/' . $r['path'];
+            if (!empty($r['path'])) {
+                // Fix potential malformed paths like 'a..jpg'
+                $r['path'] = str_replace('..', '.', $r['path']);
+                if (strpos($r['path'], '/') === false) {
+                    $r['path'] = 'images/' . $r['path'];
+                }
             }
         }
         return $rows;

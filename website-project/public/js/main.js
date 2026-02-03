@@ -1,6 +1,8 @@
 import { initNavbar } from './nav.js?v=4';
 import { initFooter } from './footer.js';
 import { setLanguage } from './lang.js';
+import { initHome } from './home.js';
+import apiClient from './apiClient.js';
 
 // Singleton IntersectionObserver for lazy-loading images across the site
 let lazyImageObserver = null;
@@ -75,10 +77,11 @@ export function initLazyLoading() {
 document.addEventListener("DOMContentLoaded", async function() {
     await initNavbar();
     initFooter();
+    initHome();
 
     // Back to Top Button Logic
     const backToTopBtn = document.getElementById('backToTopBtn');
-    if (backToTopBtn) {
+    if (backToTopBtn && backToTopBtn.style) {
         window.addEventListener('scroll', () => {
             if (window.scrollY > 300) {
                 backToTopBtn.style.display = 'block';
@@ -103,11 +106,17 @@ document.addEventListener("DOMContentLoaded", async function() {
     if (!localStorage.getItem('cookiesAccepted')) {
         document.body.appendChild(cookieBanner);
         // Small delay to allow CSS transition if added
-        setTimeout(() => cookieBanner.style.display = 'flex', 100);
+        setTimeout(() => {
+            if (cookieBanner && cookieBanner.style) {
+                cookieBanner.style.display = 'flex';
+            }
+        }, 100);
         
         document.getElementById('acceptCookies').addEventListener('click', () => {
             localStorage.setItem('cookiesAccepted', 'true');
-            cookieBanner.style.display = 'none';
+            if (cookieBanner && cookieBanner.style) {
+                cookieBanner.style.display = 'none';
+            }
         });
     }
 
@@ -120,12 +129,7 @@ document.addEventListener("DOMContentLoaded", async function() {
         if (!listingsStat) return; // Only run on homepage
 
         try {
-            const response = await fetch('api/stats');
-            if (!response.ok) {
-                throw new Error(`Network response was not ok: ${response.statusText}`);
-            }
-            
-            const stats = await response.json();
+            const stats = await apiClient.request('/stats');
             console.log('Stats received:', stats);
 
             const familiesStat = document.getElementById('stat-families');

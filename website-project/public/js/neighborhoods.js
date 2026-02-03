@@ -5,7 +5,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function loadNeighborhoods() {
         try {
-            const neighborhoods = await apiClient.request('/neighborhoods');
+            const response = await apiClient.request('/neighborhoods');
+            const neighborhoods = response.data;
 
             if (!neighborhoods || neighborhoods.length === 0) {
                 neighborhoodList.innerHTML = '<p>No neighborhoods found.</p>';

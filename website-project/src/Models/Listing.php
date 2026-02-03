@@ -136,7 +136,32 @@ class Listing extends BaseModel {
     }
 
     public static function getFeatured($limit = 6) {
-        return self::rawQuery("SELECT * FROM " . static::$tableName . " ORDER BY RAND() LIMIT ?", [$limit], true);
+        $results = self::rawQuery("
+            SELECT
+                l.id,
+                l.title,
+                l.rent_amount as price,
+                l.city,
+                ht.name as bedrooms
+            FROM " . static::$tableName . " l
+            LEFT JOIN house_types ht ON l.htype_id = ht.id
+            ORDER BY RAND()
+            LIMIT ?", [$limit], true);
+
+        if (!empty($results)) {
+            $listingIds = array_column($results, 'id');
+            // Use Image::findByListingIds which supports fetching images for multiple listings
+            $images = Image::findByListingIds($listingIds);
+            $imagesByListingId = [];
+            foreach($images as $image) {
+                $imagesByListingId[$image['listing_id']][] = $image;
+            }
+            foreach ($results as &$listing) {
+                $listing['images'] = $imagesByListingId[$listing['id']] ?? [];
+            }
+        }
+        
+        return $results;
     }
 
     public static function countByStatus(string $status): int {

@@ -1,0 +1,119 @@
+:root {
+    --primary-color: #0d6efd;
+    --dark-bg: #121212;
+    --light-text: #f8f9fa;
+    --secondary-text: #adb5bd;
+}
+body {
+    background-color: var(--dark-bg);
+    color: var(--light-text);
+}
+.navbar {
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(10px);
+}
+/* Part 2.1: Hero Section */
+.hero-section {
+    position: relative;
+    height: 70vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: white;
+    overflow: hidden;
+}
+.hero-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: url('../images/1.jpeg') no-repeat center center/cover;
+    z-index: 1;
+}
+.hero-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    z-index: 2;
+}
+.hero-content {
+    position: relative;
+    z-index: 3;
+    padding: 2rem;
+}
+.hero-content h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+}
+.ai-search-bar {
+    max-width: 600px;
+    margin: 0 auto;
+    position: relative;
+}
+.ai-search-bar input {
+    width: 100%;
+    padding: 1rem 4rem 1rem 1.5rem;
+    border-radius: 50px;
+    border: none;
+    font-size: 1.1rem;
+}
+.ai-search-bar button {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 45px;
+    height: 45px;
+    font-size: 1.2rem;
+}
+/* Part 2.2: Featured Properties */
+.featured-properties {
+    padding: 4rem 0;
+}
+.featured-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+}
+.listing-card {
+    background: #1e1e1e;
+    border-radius: 15px;
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.listing-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+}
+.listing-card img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+}
+.listing-card-content {
+    padding: 1.5rem;
+}
+/* Part 2.3: How it Works */
+.how-it-works {
+    background-color: #1e1e1e;
+    padding: 4rem 0;
+}
+.how-it-works i {
+    font-size: 3rem;
+    color: var(--primary-color);
+}
+/* Part 2.4: Call to Action */
+.cta-section {
+    padding: 5rem 0;
+    text-align: center;
+}

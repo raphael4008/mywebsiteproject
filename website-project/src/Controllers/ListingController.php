@@ -7,6 +7,7 @@ use League\Flysystem\Local\LocalFilesystemAdapter;
 use App\Controllers\BaseController;
 use App\Models\Listing;
 use App\Models\Image;
+use App\Models\Amenity;
 use App\Services\AISearchService;
 use OpenAI;
 
@@ -179,12 +180,14 @@ class ListingController extends BaseController {
             $neighborhoodStmt = $this->pdo->query("SELECT DISTINCT neighborhood FROM listings ORDER BY neighborhood ASC");
             $htypeStmt = $this->pdo->query("SELECT name FROM house_types ORDER BY name ASC");
             $styleStmt = $this->pdo->query("SELECT name FROM styles ORDER BY name ASC");
+            $amenities = Amenity::all();
 
             $context = [
                 'cities' => $cityStmt->fetchAll(\PDO::FETCH_COLUMN),
                 'neighborhoods' => $neighborhoodStmt->fetchAll(\PDO::FETCH_COLUMN),
                 'htypes' => $htypeStmt->fetchAll(\PDO::FETCH_COLUMN),
                 'styles' => $styleStmt->fetchAll(\PDO::FETCH_COLUMN),
+                'amenities' => array_column($amenities, 'name'),
             ];
 
             $aiService = new AISearchService();

@@ -316,6 +316,7 @@ body {
     display: flex;
     align-items: flex-end;
     padding: 1rem;
+    pointer-events: none; /* Make overlay non-clickable */
 }
 
 .listing-pin-card:hover .card-overlay {

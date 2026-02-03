@@ -1,15 +1,19 @@
 <?php
 namespace App\Models;
 
+use PDO;
+
 class Message extends BaseModel {
     protected static $tableName = 'messages';
-    protected static $fillable = ['name', 'email', 'message'];
 
-    public static function create(array $data) {
-        $data['name'] = htmlspecialchars(strip_tags((string)$data['name']));
-        $data['email'] = htmlspecialchars(strip_tags((string)$data['email']));
-        $data['message'] = htmlspecialchars(strip_tags((string)$data['message']));
-        
-        return parent::create($data);
+    public static function findByReceiverId($receiverId) {
+        $sql = "
+            SELECT m.*, u.name as sender_name
+            FROM " . self::$tableName . " m
+            JOIN users u ON m.sender_id = u.id
+            WHERE m.receiver_id = ?
+            ORDER BY m.created_at DESC
+        ";
+        return self::rawQuery($sql, [$receiverId], true);
     }
 }

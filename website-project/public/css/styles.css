@@ -1,3 +1,5 @@
+@import "~bootstrap/dist/css/bootstrap.min.css";
+
 :root {
     --primary: #E87A5D; /* Burnt Sienna */
     --surface: #FFFFF0; /* Ivory */

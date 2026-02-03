@@ -4,13 +4,17 @@ import { createListingCard, formatDate } from './utils.js';
 import { showNotification } from './utils.js';
 
 const ApiEndpoints = {
-    ANALYTICS: '/landlord/analytics',
-    ACTIVITIES: '/landlord/activities',
-    PROPERTIES: '/landlord/properties',
-    RESERVATIONS: '/landlord/reservations',
+    ANALYTICS: '/owner/stats',
+    ACTIVITIES: '/owner/activities',
+    PROPERTIES: '/owner/my-listings',
+    RESERVATIONS: '/owner/reservations',
     LISTINGS: '/listings',
-    CITIES: '/meta/cities', // New endpoint for cities
-    HOUSE_TYPES: '/meta/housetypes', // New endpoint for house types
+    CITIES: '/cities', 
+    HOUSE_TYPES: '/house-types',
+    FINANCIALS: '/owner/financials',
+    TRANSACTIONS: '/owner/transactions',
+    UNAVAILABILITY: '/owner/unavailability',
+    MESSAGES: '/owner/messages',
 };
 
 const AppState = {
@@ -93,33 +97,33 @@ document.addEventListener('DOMContentLoaded', async () => { // Made async
 });
 
 function checkAuth() {
-    const token = localStorage.getItem('token');
-    const userString = localStorage.getItem('user');
+    // const token = localStorage.getItem('token');
+    // const userString = localStorage.getItem('user');
 
-    if (!token || !userString) {
-        window.location.href = '../login.php?redirect=owners/index.php';
-        return;
-    }
+    // if (!token || !userString) {
+    //     window.location.href = '../login.php?redirect=owners/index.php';
+    //     return;
+    // }
 
-    try {
-        const user = JSON.parse(userString);
-        if (user.role !== 'owner') {
-            console.warn('User is not an owner. Redirecting.');
-            window.location.href = '../login.php?redirect=owners/index.php';
-            return; // Added return to prevent further execution
-        }
-        AppState.user = user; // Store user data in AppState
-        // Display owner name
-        document.getElementById('ownerNameDisplay').textContent = AppState.user.name || 'Owner';
-    } catch (error) {
-        console.error('Failed to parse user data, redirecting to login.', error);
-        window.location.href = '../login.html?redirect=owners/index.html';
-    }
+    // try {
+    //     const user = JSON.parse(userString);
+    //     if (user.role !== 'owner') {
+    //         console.warn('User is not an owner. Redirecting.');
+    //         window.location.href = '../login.php?redirect=owners/index.php';
+    //         return; // Added return to prevent further execution
+    //     }
+    //     AppState.user = user; // Store user data in AppState
+    //     // Display owner name
+    //     document.getElementById('ownerNameDisplay').textContent = AppState.user.name || 'Owner';
+    // } catch (error) {
+    //     console.error('Failed to parse user data, redirecting to login.', error);
+    //     window.location.href = '../login.html?redirect=owners/index.html';
+    // }
 }
 
 function showSection(sectionName, pushState = true) {
     // Validate sectionName against allowed sections
-    const allowedSections = ['overview', 'properties', 'reservations', 'financials'];
+    const allowedSections = ['overview', 'properties', 'reservations', 'financials', 'messages'];
     if (!allowedSections.includes(sectionName)) {
         sectionName = 'overview'; // Default to overview if invalid
     }
@@ -161,6 +165,9 @@ function showSection(sectionName, pushState = true) {
             break;
         case 'financials':
             loadFinancials();
+            break;
+        case 'messages':
+            loadMessages();
             break;
     }
 }
@@ -287,22 +294,22 @@ async function loadOverview() {
         }
     });
 
-    try {
-        const stats = await apiClient.request(ApiEndpoints.ANALYTICS);
+    const eventSource = new EventSource('api/owner/stats/stream');
+
+    eventSource.onmessage = function(event) {
+        const stats = JSON.parse(event.data);
         document.getElementById('totalProperties').textContent = stats.totalListings || '0';
         document.getElementById('activeListings').textContent = stats.activeListings || '0';
         document.getElementById('totalViews').textContent = stats.totalViews || '0';
         document.getElementById('totalRevenue').textContent = 'KES ' + Number(stats.totalEarnings || 0).toLocaleString();
-        loadActivityLog(); // Activity log is part of overview
-    } catch (error) {
-        console.error('Failed to load overview stats:', error);
-        statIds.forEach(id => {
-            const element = document.getElementById(id);
-            if (element) {
-                element.textContent = 'N/A';
-            }
-        });
-    }
+    };
+
+    eventSource.onerror = function(err) {
+        console.error('EventSource failed:', err);
+        eventSource.close();
+    };
+
+    loadActivityLog(); // Activity log is part of overview
 }
 
 async function loadActivityLog() {
@@ -323,7 +330,13 @@ async function loadActivityLog() {
 async function loadProperties() {
     await loadContentIntoContainer('propertiesList', async () => {
         return await apiClient.request(ApiEndpoints.PROPERTIES);
-    }, (listings) => {
+    }, (response) => {
+        const { listings, stats } = response.data;
+        
+        // Update overview stats
+        document.getElementById('totalProperties').textContent = stats.total_listings || '0';
+        document.getElementById('totalViews').textContent = stats.total_views || '0';
+
         const html = listings.map(listing => createListingCard(listing, 'owner')).join('');
 
         // Attach event listeners for edit/delete after DOM insertion
@@ -719,4 +732,99 @@ function setupAddPropertyForm() {
                     }
                 });
             }
+
+async function loadMessages() {
+    await loadContentIntoContainer('conversationsList', async () => {
+        return await apiClient.request(ApiEndpoints.MESSAGES);
+    }, (messages) => {
+        if (messages.length === 0) {
+            return '<div class="text-center p-3 text-muted">No messages found.</div>';
+        }
+
+        // Group messages by sender
+        const conversations = messages.reduce((acc, msg) => {
+            if (!acc[msg.sender_id]) {
+                acc[msg.sender_id] = {
+                    id: msg.sender_id,
+                    name: msg.sender_name, // Use sender_name from API
+                    messages: [],
+                    lastMessage: null,
+                    lastMessageDate: null
+                };
+            }
+            acc[msg.sender_id].messages.push(msg);
+            if (!acc[msg.sender_id].lastMessageDate || new Date(msg.created_at) > new Date(acc[msg.sender_id].lastMessageDate)) {
+                acc[msg.sender_id].lastMessage = msg.message;
+                acc[msg.sender_id].lastMessageDate = msg.created_at;
+            }
+            return acc;
+        }, {});
+
+        // Sort conversations by the date of the last message
+        const sortedConversations = Object.values(conversations).sort((a, b) => new Date(b.lastMessageDate) - new Date(a.lastMessageDate));
+
+        // Attach event listeners after rendering
+        setTimeout(() => {
+            document.querySelectorAll('.conversation-item').forEach(item => {
+                item.addEventListener('click', (e) => {
+                    const senderId = e.currentTarget.dataset.senderId;
+                    const conversation = sortedConversations.find(c => c.id == senderId);
+                    showConversation(conversation);
+                });
+            });
+        }, 0);
+
+        return sortedConversations.map(conv => `
+            <a href="#" class="list-group-item list-group-item-action conversation-item" data-sender-id="${conv.id}">
+                <div class="d-flex w-100 justify-content-between">
+                    <h6 class="mb-1">${conv.name}</h6>
+                    <small>${new Date(conv.lastMessageDate).toLocaleDateString()}</small>
+                </div>
+                <p class="mb-1 text-truncate">${conv.lastMessage}</p>
+            </a>
+        `).join('');
+    }, 'No messages found.');
+}
+
+function showConversation(conversation) {
+    document.getElementById('conversationHeader').textContent = `Conversation with ${conversation.name}`;
+
+    const messagesHtml = conversation.messages.map(msg => {
+        const isOwner = msg.sender_id !== conversation.id; // Check if the sender is not the other user
+        return `
+            <div class="d-flex ${isOwner ? 'justify-content-end' : ''} mb-3">
+                <div class="card" style="max-width: 75%;">
+                    <div class="card-body p-2">
+                        <p class="mb-0 small">${msg.message}</p>
+                        <small class="text-muted d-block text-end">${new Date(msg.created_at).toLocaleString()}</small>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    document.getElementById('conversationMessages').innerHTML = messagesHtml;
+    
+    const messageInput = document.getElementById('messageInput');
+    const sendMessageBtn = document.querySelector('#sendMessageForm button');
+    
+    messageInput.disabled = false;
+    sendMessageBtn.disabled = false;
+    
+    // You would set up the form submission logic here
+    document.getElementById('sendMessageForm').onsubmit = (e) => {
+        e.preventDefault();
+        const messageText = messageInput.value;
+        if (!messageText.trim()) return;
+        
+        // This part is not fully implemented:
+        // You would need an API endpoint to send a message
+        console.log(`Sending message to ${conversation.name}: ${messageText}`);
+        
+        messageInput.value = ''; // Clear input
+        
+        // For demonstration, you could add the message to the UI directly
+        // but it's better to refetch or get confirmation from the server.
+    };
+}
             

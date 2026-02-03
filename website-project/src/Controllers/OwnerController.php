@@ -9,26 +9,66 @@ use App\Models\User;
 
 class OwnerController extends BaseController {
 
+    public function streamDashboardStats() {
+        header('Content-Type: text/event-stream');
+        header('Cache-Control: no-cache');
+        header('Connection: keep-alive');
+
+        while (true) {
+            $user = JwtMiddleware::authorize();
+            $ownerId = $user['id'];
+
+            $totalListings = Listing::search(['owner_id' => $ownerId])['total'];
+            $activeListings = Listing::search(['owner_id' => $ownerId, 'status' => 'AVAILABLE'])['total'];
+            
+            $pdo = \App\Config\DatabaseConnection::getInstance()->getConnection();
+            $stmt = $pdo->prepare('SELECT SUM(views) FROM listings WHERE owner_id = ?');
+            $stmt->execute([$ownerId]);
+            $totalViews = $stmt->fetchColumn();
+
+            $payments = Payment::findByOwnerId($ownerId);
+            $totalEarnings = array_reduce($payments, function($carry, $payment) {
+                return $carry + $payment['amount'];
+            }, 0);
+
+            $data = [
+                'totalListings' => $totalListings,
+                'activeListings' => $activeListings,
+                'totalViews' => (int)$totalViews,
+                'totalEarnings' => $totalEarnings,
+            ];
+
+            echo "data: " . json_encode($data) . "\n\n";
+            
+            ob_flush();
+            flush();
+            
+            sleep(5);
+        }
+    }
+
     public function getDashboardStats() {
         $user = JwtMiddleware::authorize();
         $ownerId = $user['id'];
 
-        $totalProperties = Listing::search(['owner_id' => $ownerId])['total'];
+        $totalListings = Listing::search(['owner_id' => $ownerId])['total'];
         $activeListings = Listing::search(['owner_id' => $ownerId, 'status' => 'AVAILABLE'])['total'];
-        $payments = Payment::findByOwnerId($ownerId);
+        
+        $pdo = \App\Config\DatabaseConnection::getInstance()->getConnection();
+        $stmt = $pdo->prepare('SELECT SUM(views) FROM listings WHERE owner_id = ?');
+        $stmt->execute([$ownerId]);
+        $totalViews = $stmt->fetchColumn();
 
-        $totalRevenue = array_reduce($payments, function($carry, $payment) {
+        $payments = Payment::findByOwnerId($ownerId);
+        $totalEarnings = array_reduce($payments, function($carry, $payment) {
             return $carry + $payment['amount'];
         }, 0);
-        
-        // totalViews is not directly implemented in the backend yet, setting to 0
-        $totalViews = 0; 
 
         $this->jsonResponse([
-            'totalProperties' => $totalProperties,
+            'totalListings' => $totalListings,
             'activeListings' => $activeListings,
-            'totalViews' => $totalViews,
-            'totalRevenue' => $totalRevenue,
+            'totalViews' => (int)$totalViews,
+            'totalEarnings' => $totalEarnings,
         ]);
     }
 
@@ -84,6 +124,13 @@ class OwnerController extends BaseController {
                 ]
             ]
         ]);
+    }
+
+    public function getMessages() {
+        $user = JwtMiddleware::authorize();
+        $ownerId = $user['id'];
+        $messages = \App\Models\Message::findByReceiverId($ownerId);
+        $this->jsonResponse($messages);
     }
 
     public function getListings() {

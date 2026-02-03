@@ -1,4 +1,4 @@
-const API_BASE_URL = 'api';
+const API_BASE_URL = (window.basePath || '') + '/api';
 const DEFAULT_TIMEOUT = 8000; // 8 seconds
 
 // --- Helper Functions ---

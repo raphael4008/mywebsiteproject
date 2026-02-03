@@ -78,6 +78,7 @@ function handleFeaturedListings() {
                 $paths = explode(',', $listing['image_paths']);
                 $listing['images'] = array_map(function($path) {
                     // PATHFINDER CHECK: Ensure the path is relative to the web root
+                    $path = str_replace('..', '.', $path);
                     return ['path' => 'images/' . basename($path)];
                 }, $paths);
             } else {
@@ -129,6 +130,7 @@ function handleSearch() {
             if ($listing['image_paths']) {
                 $paths = explode(',', $listing['image_paths']);
                 $listing['images'] = array_map(function($path) {
+                    $path = str_replace('..', '.', $path);
                     return ['path' => 'images/' . basename($path)];
                 }, $paths);
             } else {
