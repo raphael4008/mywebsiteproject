@@ -1,51 +1,90 @@
-<!-- Part 2.1: Hero Section -->
-    <section class="hero-section">
-        <div class="hero-background"></div>
-        <div class="hero-overlay"></div>
-        <div class="hero-content">
-            <h1>Find your dream home using natural language.</h1>
-            <div class="ai-search-bar">
-                <input type="text" id="ai-search-input" placeholder="e.g., 'A modern 3-bedroom in Kilimani with a pool'">
-                <button id="ai-search-btn"><i class="fas fa-search"></i></button>
-            </div>
+<!-- Hero Section -->
+<div class="container-fluid hero-section" style="position: relative; height: 60vh; background: url('{{ basePath }}/images/b.jpg') no-repeat center center; background-size: cover;">
+    <div class="hero-overlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5);"></div>
+    <div class="container hero-content text-center" style="position: relative; z-index: 2; top: 50%; transform: translateY(-50%); color: white;">
+        <h1 class="display-4 fw-bold">Your Next Home Awaits</h1>
+        <p class="lead">Discover the perfect place to live with our powerful and intuitive search tools.</p>
+        <div class="mt-4">
+            <a href="/listings" class="btn btn-primary btn-lg me-2">Explore Listings</a>
+            <a href="/about" class="btn btn-outline-light btn-lg">Learn More</a>
         </div>
-    </section>
+    </div>
+</div>
 
-    <!-- Part 2.2: Featured Properties -->
-    <section class="featured-properties container">
-        <h2 class="text-center mb-5">Featured Properties</h2>
-        <div id="featured-grid" class="featured-grid">
-            <!-- Featured listings will be injected here by JavaScript -->
-        </div>
-    </section>
-
-    <!-- Part 2.3: 'How it Works' Section -->
-    <section class="how-it-works">
-        <div class="container text-center">
-            <h2 class="mb-5">A Smarter Way to Find a Home</h2>
-            <div class="row">
-                <div class="col-md-4 mb-4">
-                    <i class="fas fa-brain mb-3"></i>
-                    <h3>Search with AI</h3>
-                    <p class="text-muted">Describe your perfect home in plain English and let our AI find matches.</p>
-                </div>
-                <div class="col-md-4 mb-4">
-                    <i class="fas fa-balance-scale mb-3"></i>
-                    <h3>Compare Homes</h3>
-                    <p class="text-muted">Easily compare your favorite listings side-by-side to make the best choice.</p>
-                </div>
-                <div class="col-md-4 mb-4">
-                    <i class="fas fa-calendar-check mb-3"></i>
-                    <h3>Book a Visit</h3>
-                    <p class="text-muted">Reserve a viewing time or connect with an agent directly from the listing.</p>
+<!-- AI-Powered Search Section -->
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h2 class="card-title text-center mb-4">Search with Natural Language</h2>
+                    <form id="ai-search-form" class="d-flex">
+                        <input type="text" id="ai-search-input" class="form-control form-control-lg" placeholder="e.g., 'A spacious 2-bedroom apartment near Yaya Centre'">
+                        <button type="submit" id="ai-search-btn" class="btn btn-primary btn-lg ms-2">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </form>
                 </div>
             </div>
         </div>
-    </section>
+    </div>
+</div>
 
-    <!-- Part 2.4: Call to Action (CTA) -->
-    <section class="cta-section container">
-        <h2>Have a property to rent or sell?</h2>
-        <p class="lead text-muted mb-4">List it with us today and reach thousands of potential tenants and buyers.</p>
-        <a href="register.php" class="btn btn-primary btn-lg">Get Started</a>
-    </section>
+<!-- Featured Properties Section -->
+<div class="container my-5">
+    <h2 class="text-center mb-4">Featured Properties</h2>
+    <div class="row g-4" id="featured-properties-container">
+        <!-- Featured properties will be dynamically loaded here -->
+    </div>
+</div>
+
+<!-- How It Works Section -->
+<div class="container-fluid bg-light py-5">
+    <div class="container">
+        <h2 class="text-center mb-5">Why Choose Us?</h2>
+        <div class="row text-center">
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <i class="fas fa-home fa-3x text-primary mb-3"></i>
+                        <h5 class="card-title">Extensive Listings</h5>
+                        <p class="card-text">A wide variety of properties to suit every need and budget.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <i class="fas fa-user-shield fa-3x text-primary mb-3"></i>
+                        <h5 class="card-title">Verified Agents</h5>
+                        <p class="card-text">Connect with trusted and verified real estate agents.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <i class="fas fa-headset fa-3x text-primary mb-3"></i>
+                        <h5 class="card-title">Dedicated Support</h5>
+                        <p class="card-text">Our team is here to assist you every step of the way.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Call to Action Section -->
+<div class="container my-5">
+    <div class="row">
+        <div class="col text-center">
+            <div class="card shadow-lg">
+                <div class="card-body">
+                    <h2 class="card-title">List Your Property with Us</h2>
+                    <p class="card-text">Reach a wide audience of potential buyers and renters by listing your property on our platform.</p>
+                    <a href="/register" class="btn btn-primary btn-lg">Become a Partner</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

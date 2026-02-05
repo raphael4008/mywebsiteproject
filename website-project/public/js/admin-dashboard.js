@@ -29,27 +29,27 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function checkAuth() {
-    // const token = localStorage.getItem('token');
-    // const userString = localStorage.getItem('user');
+    const token = localStorage.getItem('token');
+    const userString = localStorage.getItem('user');
 
-    // if (!token || !userString) {
-    //     window.location.href = '../login.php?redirect=admin/index.php';
-    //     return;
-    // }
+    if (!token || !userString) {
+        window.location.href = '../login.php?redirect=admin/index.php';
+        return;
+    }
 
-    // try {
-    //     const user = JSON.parse(userString);
-    //     if (user.role !== 'admin') {
-    //         console.warn('User is not an admin. Redirecting.');
-    //         window.location.href = '../login.php?redirect=admin/index.php';
-    //         return;
-    //     }
-    //     AppState.user = user; // Store user data in AppState
-    //     // Potentially display admin name here if there's an element for it
-    // } catch (error) {
-    //     console.error('Failed to parse user data, redirecting to login.', error);
-    //     window.location.href = '../login.html?redirect=admin/index.html';
-    // }
+    try {
+        const user = JSON.parse(userString);
+        if (user.role !== 'admin') {
+            console.warn('User is not an admin. Redirecting.');
+            window.location.href = '../login.php?redirect=admin/index.php';
+            return;
+        }
+        AppState.user = user; // Store user data in AppState
+        // Potentially display admin name here if there's an element for it
+    } catch (error) {
+        console.error('Failed to parse user data, redirecting to login.', error);
+        window.location.href = '../login.html?redirect=admin/index.html';
+    }
 }
 
 

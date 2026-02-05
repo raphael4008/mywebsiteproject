@@ -7,9 +7,12 @@ export const formatCurrency = (amount) => {
 };
 
 export const getImageUrl = (img) => {
-    if (!img) return 'images/placeholder.svg';
-    if (typeof img === 'string') return img;
-    return img.path || img.image_path || 'images/placeholder.svg';
+    const basePath = window.basePath || '';
+    if (!img) return `${basePath}/images/placeholder.svg`;
+    if (typeof img === 'string') return `${basePath}/${img}`;
+    const imagePath = img.path || img.image_path;
+    if (imagePath) return `${basePath}/${imagePath}`;
+    return `${basePath}/images/placeholder.svg`;
 };
 
 export const formatDate = (dateString) => {

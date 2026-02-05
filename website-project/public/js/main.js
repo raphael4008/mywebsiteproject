@@ -77,7 +77,23 @@ export function initLazyLoading() {
 document.addEventListener("DOMContentLoaded", async function() {
     await initNavbar();
     initFooter();
-    initHome();
+
+    if (document.querySelector('.hero-section')) {
+        initHome();
+        updateHomepageStats();
+    }
+
+    // Navbar scroll effect
+    const navbar = document.querySelector('.main-nav');
+    if (navbar) {
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 50) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        });
+    }
 
     // Back to Top Button Logic
     const backToTopBtn = document.getElementById('backToTopBtn');

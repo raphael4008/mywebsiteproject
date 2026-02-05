@@ -5,13 +5,19 @@ use \PDO;
 use App\Models\BaseModel; // Add use statement for BaseModel
 
 class OwnerPayment extends BaseModel {
-    protected static $tableName = 'owner_payments';
+    protected static $tableName = 'payments';
     protected static $primaryKey = 'id';
-    protected static $fillable = ['owner_id', 'status', 'amount', 'transaction_id', 'payment_date', 'created_at', 'updated_at']; // Example fillable fields
+    protected static $fillable = ['reservation_id', 'status', 'amount', 'payment_method', 'transaction_id', 'created_at', 'updated_at']; // Example fillable fields
 
     public static function findByOwnerId($ownerId) {
-        // Using BaseModel's where method for simplicity, adding order by
-        return static::where(['owner_id' => $ownerId], 'created_at', 'DESC');
+        $sql = "
+            SELECT p.*, l.title as property_title FROM payments p
+            JOIN reservations r ON p.reservation_id = r.id
+            JOIN listings l ON r.listing_id = l.id
+            WHERE l.owner_id = ?
+            ORDER BY p.created_at DESC
+        ";
+        return self::rawQuery($sql, [$ownerId], true);
     }
 
     public static function getAll() {

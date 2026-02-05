@@ -11,79 +11,120 @@ class Listing extends BaseModel {
     const DEFAULT_LIMIT = 10;
 
     public static function search($params) {
-        $sql = [];
-        $bindings = [];
-
-        if (!empty($params['status'])) { $sql[] = 'status = ?'; $bindings[] = $params['status']; }
-        if (!empty($params['owner_id'])) { $sql[] = 'owner_id = ?'; $bindings[] = (int)$params['owner_id']; }
-        if (!empty($params['city'])) { $sql[] = 'LOWER(city) = ?'; $bindings[] = strtolower($params['city']); }
-        if (!empty($params['neighborhood'])) { $sql[] = 'LOWER(neighborhood) = ?'; $bindings[] = strtolower($params['neighborhood']); }
-        if (!empty($params['minRent'])) { $sql[] = 'rent_amount >= ?'; $bindings[] = (int)$params['minRent']; }
-        if (!empty($params['maxRent'])) { $sql[] = 'rent_amount <= ?'; $bindings[] = (int)$params['maxRent']; }
-        if (!empty($params['htype'])) { $sql[] = 'htype_id = (SELECT id FROM house_types WHERE name = ?)'; $bindings[] = $params['htype']; }
-        if (!empty($params['style'])) { $sql[] = 'style_id = (SELECT id FROM styles WHERE name = ?)'; $bindings[] = strtoupper($params['style']); }
-        if (!empty($params['furnished'])) { $sql[] = 'furnished = ?'; $bindings[] = 1; }
-        if (!empty($params['verified'])) { $sql[] = 'verified = ?'; $bindings[] = 1; }
-        if (!empty($params['exclude_id'])) { $sql[] = 'id != ?'; $bindings[] = (int)$params['exclude_id']; }
         if (!empty($params['ai_query'])) {
-            $sql[] = 'MATCH(title, description, city) AGAINST(? IN NATURAL LANGUAGE MODE)';
-            $bindings[] = $params['ai_query'];
-        }
-
-        $whereClause = !empty($sql) ? 'WHERE ' . implode(' AND ', $sql) : '';
-
-        $totalSql = "SELECT COUNT(*) FROM " . static::$tableName . " " . $whereClause;
-        $countResult = self::rawQuery($totalSql, $bindings, true);
-        $total = $countResult[0]['COUNT(*)'] ?? 0;
-
-        $sort_sql = ' ORDER BY verified DESC, status ASC, rent_amount ASC';
-        if (!empty($params['sort'])) {
-            switch ($params['sort']) {
-                case 'price_asc':
-                    $sort_sql = ' ORDER BY rent_amount ASC';
-                    break;
-                case 'price_desc':
-                    $sort_sql = ' ORDER BY rent_amount DESC';
-                    break;
-                case 'newest':
-                    $sort_sql = ' ORDER BY created_at DESC';
-                    break;
+            $aiService = new \App\Services\AISearchService();
+            $cacheFile = __DIR__ . '/../../cache/ai_search_context.json';
+            $cacheLifetime = 86400; // 24 hours
+    
+            $context = null;
+    
+            if (file_exists($cacheFile) && (time() - file_get_contents($cacheFile)) < $cacheLifetime) {
+                $context = json_decode(file_get_contents($cacheFile), true);
             }
-        }
-        
-        $limit = !empty($params['limit']) ? (int)$params['limit'] : self::DEFAULT_LIMIT;
-        $offset = !empty($params['offset']) ? (int)$params['offset'] : 0;
-        
-        $resultsSql = "
-            SELECT
-                l.id,
-                l.title,
-                l.rent_amount as price,
-                l.city,
-                ht.name as bedrooms
-            FROM " . static::$tableName . " l
-            LEFT JOIN house_types ht ON l.htype_id = ht.id
-        " . $whereClause . $sort_sql . " LIMIT ? OFFSET ?";
-        
-        $bindings[] = $limit;
-        $bindings[] = $offset;
-
-        $results = self::rawQuery($resultsSql, $bindings, true);
-
-        if (!empty($results)) {
-            $listingIds = array_column($results, 'id');
-            // Use Image::findByListingIds which supports fetching images for multiple listings
-            $images = Image::findByListingIds($listingIds);
-            $imagesByListingId = [];
-            foreach($images as $image) {
-                $imagesByListingId[$image['listing_id']][] = $image;
+            
+            if (!$context) {
+                $pdo = \App\Config\DatabaseConnection::getInstance()->getConnection();
+                $cityStmt = $pdo->query("SELECT DISTINCT city FROM listings ORDER BY city ASC");
+                $neighborhoodStmt = $pdo->query("SELECT DISTINCT neighborhood FROM listings ORDER BY neighborhood ASC");
+                $htypeStmt = $pdo->query("SELECT name FROM house_types ORDER BY name ASC");
+                $styleStmt = $pdo->query("SELECT name FROM styles ORDER BY name ASC");
+                $amenities = Amenity::all();
+    
+                $context = [
+                    'cities' => $cityStmt->fetchAll(\PDO::FETCH_COLUMN),
+                    'neighborhoods' => $neighborhoodStmt->fetchAll(\PDO::FETCH_COLUMN),
+                    'htypes' => $htypeStmt->fetchAll(\PDO::FETCH_COLUMN),
+                    'styles' => $styleStmt->fetchAll(\PDO::FETCH_COLUMN),
+                    'amenities' => array_column($amenities, 'name'),
+                ];
+                
+                file_put_contents($cacheFile, json_encode($context));
             }
-            foreach ($results as &$listing) {
-                $listing['images'] = $imagesByListingId[$listing['id']] ?? [];
-            }
+    
+            $aiParams = $aiService->getParamsFromQuery($params['ai_query'], $context);
+            unset($params['ai_query']);
+            $params = array_merge($params, $aiParams);
         }
+        $joins = [];
+$sql = [];
+$bindings = [];
+
+if (!empty($params['status'])) { $sql[] = 'l.status = ?'; $bindings[] = $params['status']; }
+if (!empty($params['owner_id'])) { $sql[] = 'l.owner_id = ?'; $bindings[] = (int)$params['owner_id']; }
+if (!empty($params['city'])) { $sql[] = 'LOWER(l.city) = ?'; $bindings[] = strtolower($params['city']); }
+if (!empty($params['neighborhood'])) { $sql[] = 'LOWER(l.neighborhood) = ?'; $bindings[] = strtolower($params['neighborhood']); }
+if (!empty($params['minRent'])) { $sql[] = 'l.rent_amount >= ?'; $bindings[] = (int)$params['minRent']; }
+if (!empty($params['maxRent'])) { $sql[] = 'l.rent_amount <= ?'; $bindings[] = (int)$params['maxRent']; }
+if (!empty($params['htype'])) {
+    $joins[] = 'LEFT JOIN house_types ht ON l.htype_id = ht.id';
+    $sql[] = 'ht.name = ?'; 
+    $bindings[] = $params['htype']; 
+}
+if (!empty($params['style'])) {
+    $joins[] = 'LEFT JOIN styles s ON l.style_id = s.id';
+    $sql[] = 's.name = ?'; 
+    $bindings[] = strtoupper($params['style']); 
+}
+if (!empty($params['furnished'])) { $sql[] = 'l.furnished = ?'; $bindings[] = 1; }
+if (!empty($params['verified'])) { $sql[] = 'l.verified = ?'; $bindings[] = 1; }
+if (!empty($params['exclude_id'])) { $sql[] = 'l.id != ?'; $bindings[] = (int)$params['exclude_id']; }
+if (!empty($params['ai_query'])) {
+    $sql[] = 'MATCH(l.title, l.description, l.city) AGAINST(? IN NATURAL LANGUAGE MODE)';
+    $bindings[] = $params['ai_query'];
+}
+
+$joinClause = !empty($joins) ? implode(' ', array_unique($joins)) : '';
+$whereClause = !empty($sql) ? 'WHERE ' . implode(' AND ', $sql) : '';
+
+$totalSql = "SELECT COUNT(*) FROM " . static::$tableName . " l " . $joinClause . " " . $whereClause;
+$countResult = self::rawQuery($totalSql, $bindings, true);
+$total = $countResult[0]['COUNT(*)'] ?? 0;
+
+$sort_sql = ' ORDER BY l.verified DESC, l.status ASC, l.rent_amount ASC';
+if (!empty($params['sort'])) {
+    switch ($params['sort']) {
+        case 'price_asc':
+            $sort_sql = ' ORDER BY l.rent_amount ASC';
+            break;
+        case 'price_desc':
+            $sort_sql = ' ORDER BY l.rent_amount DESC';
+            break;
+        case 'newest':
+            $sort_sql = ' ORDER BY l.created_at DESC';
+            break;
+    }
+}
         
-        return ['data' => $results, 'total' => $total];
+$limit = !empty($params['limit']) ? (int)$params['limit'] : self::DEFAULT_LIMIT;
+$offset = !empty($params['offset']) ? (int)$params['offset'] : 0;
+        
+$resultsSql = "
+    SELECT
+        l.id,
+        l.title,
+        l.rent_amount as price,
+        l.city,
+        ht.name as bedrooms,
+        img.path as main_image
+    FROM " . static::$tableName . " l
+    LEFT JOIN house_types ht ON l.htype_id = ht.id
+    LEFT JOIN images img ON l.id = img.listing_id AND img.is_main = 1
+    " . $joinClause . "
+" . $whereClause . $sort_sql . " LIMIT ? OFFSET ?";
+        
+$bindings[] = $limit;
+$bindings[] = $offset;
+
+$results = self::rawQuery($resultsSql, $bindings, true);
+
+if (!empty($results)) {
+    foreach ($results as &$listing) {
+        $listing['images'] = $listing['main_image'] ? [['path' => $listing['main_image']]] : [];
+        unset($listing['main_image']);
+    }
+}
+        
+return ['data' => $results, 'total' => $total];
     }
 
     public static function findByIdWithDetails($id) {
@@ -145,7 +186,8 @@ class Listing extends BaseModel {
                 ht.name as bedrooms
             FROM " . static::$tableName . " l
             LEFT JOIN house_types ht ON l.htype_id = ht.id
-            ORDER BY RAND()
+            WHERE l.is_featured = 1
+            ORDER BY l.created_at DESC
             LIMIT ?", [$limit], true);
 
         if (!empty($results)) {

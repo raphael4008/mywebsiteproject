@@ -6,8 +6,11 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
+// Ensure the base path is set
 if (!isset($GLOBALS['basePath'])) {
-    $GLOBALS['basePath'] = dirname($_SERVER['SCRIPT_NAME']);
+    $GLOBALS['basePath'] = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/');
 }
 
-\App\Helpers\render('agents', ['title' => 'Our Agents']);
+
+\App\Helpers\render('owners', ['title' => 'For Property Owners']);
+

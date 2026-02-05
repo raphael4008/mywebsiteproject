@@ -2,13 +2,16 @@
 namespace App\Models;
 
 use App\Config\DatabaseConnection;
+use PDO;
 
-class Image extends BaseModel {
+class Image extends BaseModel
+{
     protected static $tableName = 'images';
     // Keep fillable flexible but we'll use a custom create to adapt to differing schemas
     protected static $fillable = ['listing_id', 'path', 'image_path', 'is_main', 'is_primary', 'created_at'];
 
-    public static function findByListingId(int $listingId): array {
+    public static function findByListingId(int $listingId): array
+    {
         $pdo = self::getPdo();
         // Determine available columns to avoid referencing missing ones
         $colStmt = $pdo->query("SHOW COLUMNS FROM images");
@@ -16,21 +19,27 @@ class Image extends BaseModel {
 
         if (in_array('path', $columns) && in_array('image_path', $columns)) {
             $pathExpr = "COALESCE(path, image_path) AS path";
-        } elseif (in_array('path', $columns)) {
+        }
+        elseif (in_array('path', $columns)) {
             $pathExpr = "path AS path";
-        } elseif (in_array('image_path', $columns)) {
+        }
+        elseif (in_array('image_path', $columns)) {
             $pathExpr = "image_path AS path";
-        } else {
+        }
+        else {
             $pathExpr = "'' AS path";
         }
 
         if (in_array('is_main', $columns) && in_array('is_primary', $columns)) {
             $mainExpr = "COALESCE(is_main, is_primary) AS is_main";
-        } elseif (in_array('is_main', $columns)) {
+        }
+        elseif (in_array('is_main', $columns)) {
             $mainExpr = "is_main AS is_main";
-        } elseif (in_array('is_primary', $columns)) {
+        }
+        elseif (in_array('is_primary', $columns)) {
             $mainExpr = "is_primary AS is_main";
-        } else {
+        }
+        else {
             $mainExpr = "0 AS is_main";
         }
 
@@ -51,8 +60,10 @@ class Image extends BaseModel {
         return $rows;
     }
 
-    public static function findByListingIds(array $listingIds): array {
-        if (empty($listingIds)) return [];
+    public static function findByListingIds(array $listingIds): array
+    {
+        if (empty($listingIds))
+            return [];
         $placeholders = implode(',', array_fill(0, count($listingIds), '?'));
         $pdo = self::getPdo();
         // Determine columns like above to avoid referencing non-existent columns
@@ -61,21 +72,27 @@ class Image extends BaseModel {
 
         if (in_array('path', $columns) && in_array('image_path', $columns)) {
             $pathExpr = "COALESCE(path, image_path) AS path";
-        } elseif (in_array('path', $columns)) {
+        }
+        elseif (in_array('path', $columns)) {
             $pathExpr = "path AS path";
-        } elseif (in_array('image_path', $columns)) {
+        }
+        elseif (in_array('image_path', $columns)) {
             $pathExpr = "image_path AS path";
-        } else {
+        }
+        else {
             $pathExpr = "'' AS path";
         }
 
         if (in_array('is_main', $columns) && in_array('is_primary', $columns)) {
             $mainExpr = "COALESCE(is_main, is_primary) AS is_main";
-        } elseif (in_array('is_main', $columns)) {
+        }
+        elseif (in_array('is_main', $columns)) {
             $mainExpr = "is_main AS is_main";
-        } elseif (in_array('is_primary', $columns)) {
+        }
+        elseif (in_array('is_primary', $columns)) {
             $mainExpr = "is_primary AS is_main";
-        } else {
+        }
+        else {
             $mainExpr = "0 AS is_main";
         }
 
@@ -98,8 +115,9 @@ class Image extends BaseModel {
     /**
      * Custom create that adapts to either 'path' or 'image_path' column in the DB.
      */
-    public static function create(array $data) {
-        $pdo = self::getPdo();
+    public static function create(array $data, ?PDO $pdo = null)
+    {
+        $pdo = $pdo ?? self::getPdo();
 
         // Determine which column exists
         $colStmt = $pdo->query("SHOW COLUMNS FROM images");
@@ -114,7 +132,8 @@ class Image extends BaseModel {
         if ($usePath) {
             $insertCols[] = 'path';
             $values[] = $data['path'] ?? $data['image_path'] ?? '';
-        } elseif ($useImagePath) {
+        }
+        elseif ($useImagePath) {
             $insertCols[] = 'image_path';
             $values[] = $data['image_path'] ?? $data['path'] ?? '';
         }
@@ -129,7 +148,8 @@ class Image extends BaseModel {
         return $pdo->lastInsertId();
     }
 
-    public static function deleteByListingId(int $listingId): bool {
+    public static function deleteByListingId(int $listingId): bool
+    {
         $images = self::findByListingId($listingId);
         foreach ($images as $image) {
             parent::delete($image['id']);

@@ -70,6 +70,7 @@ CREATE TABLE IF NOT EXISTS listings (
     status ENUM('available', 'pending', 'reserved', 'rented', 'rejected') DEFAULT 'pending',
     verified BOOLEAN DEFAULT FALSE,
     furnished BOOLEAN DEFAULT FALSE,
+    is_featured BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (owner_id) REFERENCES users(id) ON DELETE SET NULL,

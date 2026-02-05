@@ -481,7 +481,7 @@ function handleAiSearch() {
             searchButton.disabled = true;
 
             try {
-                const aiParams = await apiClient.request('/users/ai-search', 'POST', { query });
+                const aiParams = await apiClient.request('/ai-search', 'POST', { query });
                 const params = new URLSearchParams(aiParams);
                 history.pushState(null, '', `listings.php?${params.toString()}`);
                 await reloadListings();

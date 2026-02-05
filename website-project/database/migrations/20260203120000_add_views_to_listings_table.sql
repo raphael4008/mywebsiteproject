@@ -1,0 +1,1 @@
+ALTER TABLE listings ADD COLUMN views INT DEFAULT 0;

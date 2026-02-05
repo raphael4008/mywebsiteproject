@@ -10,4 +10,4 @@ if (!isset($GLOBALS['basePath'])) {
     $GLOBALS['basePath'] = dirname($_SERVER['SCRIPT_NAME']);
 }
 
-\App\Helpers\render('agents', ['title' => 'Our Agents']);
+\App\Helpers\render('home', ['title' => 'HouseHunter - Find Your Dream Home']);

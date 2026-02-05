@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
             searchButton.disabled = true;
 
             try {
-                const aiParams = await apiClient.request('/users/ai-search', 'POST', { query });
+                const aiParams = await apiClient.request('/ai-search', 'POST', { query });
                 const params = new URLSearchParams(aiParams);
                 window.location.search = params.toString();
             } catch (error) {

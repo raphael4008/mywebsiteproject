@@ -1,159 +1,183 @@
-
 import apiClient from './apiClient.js';
 import { formatCurrency, getImageUrl, showNotification } from './utils.js';
+import { toggleFavorite, getFavoriteButtonHtml } from './wishlist.js';
 
 document.addEventListener('DOMContentLoaded', () => {
-    const listingsContainer = document.getElementById('all-listings-container');
-    if (!listingsContainer) return;
+    const listingsGrid = document.getElementById('listings-grid');
+    if (!listingsGrid) return;
 
-    let columns = [];
-    let listings = [];
-    let currentPage = 0;
+    let currentPage = 1;
     const limit = 12;
     let isLoading = false;
     let totalListings = 0;
 
-    // --- Masonry Layout Logic ---
-    function setupMasonryGrid() {
-        listingsContainer.style.display = 'flex';
-        listingsContainer.style.alignItems = 'flex-start';
-        const columnCount = getColumnCount();
-        columns = [];
-        for (let i = 0; i < columnCount; i++) {
-            const column = document.createElement('div');
-            column.classList.add('masonry-column');
-            column.style.width = `${100 / columnCount}%`;
-            column.style.padding = '0 10px';
-            listingsContainer.appendChild(column);
-            columns.push(column);
-        }
-    }
+    function createListingCard(listing) {
+        const col = document.createElement('div');
+        col.className = 'col-lg-4 col-md-6';
 
-    function getColumnCount() {
-        if (window.innerWidth >= 1200) return 4;
-        if (window.innerWidth >= 992) return 3;
-        if (window.innerWidth >= 768) return 2;
-        return 1;
-    }
-
-    function getShortestColumn() {
-        return columns.reduce((shortest, current) => {
-            return current.offsetHeight < shortest.offsetHeight ? current : shortest;
-        }, columns[0]);
-    }
-
-    function createPinterestListingCard(listing) {
         const card = document.createElement('div');
-        card.classList.add('listing-pin-card');
-        const carouselId = `listingCarousel-${listing.id}`;
-        const imageCarouselHtml = listing.images && listing.images.length ? `
-            <div id="${carouselId}" class="carousel slide carousel-fade" data-bs-ride="carousel" data-bs-interval="false">
-                <div class="carousel-inner rounded-top">
-                    ${listing.images.map((img, index) => `
-                        <div class="carousel-item ${index === 0 ? 'active' : ''}">
-                            <img src="${getImageUrl(img)}" class="d-block w-100" style="height: 200px; object-fit: cover;" alt="${listing.title} image ${index + 1}">
-                        </div>
-                    `).join('')}
-                </div>
-                ${listing.images.length > 1 ? `
-                <button class="carousel-control-prev" type="button" data-bs-target="#${carouselId}" data-bs-slide="prev">
-                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                    <span class="visually-hidden">Previous</span>
-                </button>
-                <button class="carousel-control-next" type="button" data-bs-target="#${carouselId}" data-bs-slide="next">
-                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                    <span class="visually-hidden">Next</span>
-                </button>
-                ` : ''}
-            </div>
-        ` : `<img src="css/placeholder.jpg" class="w-100 rounded-top" style="height: 200px; object-fit: cover;" alt="Placeholder image">`;
+        card.className = 'card h-100 shadow-sm listing-card-new';
+
+        const imageUrl = getImageUrl(listing.images && listing.images[0], `${window.basePath}/images/placeholder.jpg`);
+        const price = formatCurrency(listing.price);
 
         card.innerHTML = `
             <a href="listing-details.php?id=${listing.id}" class="text-decoration-none text-dark">
                 <div class="position-relative">
-                    ${imageCarouselHtml}
-                    <div class="card-overlay">
-                        <h5 class="card-title-pin text-truncate">${listing.title}</h5>
-                    </div>
+                    <img src="${imageUrl}" class="card-img-top" alt="${listing.title}" style="height: 220px; object-fit: cover;">
+                    <div class="badge bg-primary position-absolute top-0 start-0 m-2">${listing.status}</div>
+                    ${getFavoriteButtonHtml(listing.id, listing.is_favorite)}
                 </div>
-                <div class="card-body-pin">
-                    <p class="text-muted small mb-1"><i class="fas fa-map-marker-alt me-1"></i> ${listing.city}</p>
-                    <p class="h6 text-primary fw-bold mb-0">${formatCurrency(listing.rent_amount)}</p>
+                <div class="card-body">
+                    <h5 class="card-title text-truncate">${listing.title}</h5>
+                    <p class="card-text text-muted small"><i class="fas fa-map-marker-alt me-1"></i>${listing.city}, ${listing.neighborhood}</p>
+                    <p class="card-text fs-5 fw-bold">${price}</p>
+                    <div class="d-flex justify-content-between text-muted border-top pt-2 mt-2">
+                        <small><i class="fas fa-bed me-1"></i> ${listing.bedrooms} Beds</small>
+                        <small><i class="fas fa-bath me-1"></i> ${listing.bathrooms} Baths</small>
+                        <small><i class="fas fa-ruler-combined me-1"></i> ${listing.surface_area} m²</small>
+                    </div>
                 </div>
             </a>
         `;
-        return card;
+
+        card.querySelector('.favorite-btn')?.addEventListener('click', (e) => {
+            e.preventDefault();
+            toggleFavorite(e.currentTarget, listing.id);
+        });
+        
+        col.appendChild(card);
+        return col;
     }
 
-    function appendListing(listing) {
-        const card = createPinterestListingCard(listing);
-        const shortestColumn = getShortestColumn();
-        shortestColumn.appendChild(card);
-    }
-
-    // --- Data Fetching and Infinite Scroll ---
-    async function fetchAndRenderListings() {
-        if (isLoading || (totalListings > 0 && listings.length >= totalListings)) return;
-
+    async function fetchListings(clear = false) {
+        if (isLoading) return;
         isLoading = true;
-        showNotification('Loading more homes...', 'info');
+
+        const loader = document.getElementById('loader');
+        const resultsCount = document.getElementById('results-count');
+        const noResults = document.getElementById('no-results');
+
+        loader.style.display = 'block';
+        noResults.style.display = 'none';
+
+        if (clear) {
+            currentPage = 1;
+            listingsGrid.innerHTML = '';
+        }
+
+        const params = new URLSearchParams(window.location.search);
+        params.set('page', currentPage);
+        params.set('limit', limit);
+        
+        const filterForm = document.getElementById('listingsFilterForm');
+        if (filterForm) {
+            const city = document.getElementById('filterCity').value;
+            const type = document.getElementById('filterType').value;
+            const price = document.getElementById('filterPrice').value;
+            if(city) params.set('city', city);
+            if(type) params.set('htype', type);
+            if(price) params.set('maxRent', price);
+        }
+        
+        const sort = document.getElementById('sortListings').value;
+        if(sort) params.set('sort', sort);
 
         try {
-            const params = new URLSearchParams(window.location.search);
-            params.set('offset', currentPage * limit);
-            params.set('limit', limit);
-            
-            // Convert params to an object to pass to apiClient
-            const searchData = Object.fromEntries(params.entries());
+            const response = await apiClient.request(`/listings/search?${params.toString()}`);
+            const { data, total } = response;
 
-            const response = await apiClient.request('/listings/search', 'GET', searchData);
-            
-            const new_listings = response.data;
-            totalListings = response.total;
+            totalListings = total;
+            resultsCount.textContent = `${total} properties found`;
 
-            if (new_listings.length > 0) {
-                new_listings.forEach(listing => {
-                    listings.push(listing);
-                    appendListing(listing);
+            if (data.length === 0 && currentPage === 1) {
+                noResults.style.display = 'block';
+            } else {
+                data.forEach(listing => {
+                    const card = createListingCard(listing);
+                    listingsGrid.appendChild(card);
                 });
                 currentPage++;
-            } else if (listings.length === 0) {
-                 listingsContainer.innerHTML = '<p class="text-center w-100">No listings found for your criteria.</p>';
             }
-
         } catch (error) {
             console.error('Failed to fetch listings:', error);
-            showNotification(`Error loading listings: ${error.message}`, 'error');
+            showNotification('Error loading listings. Please try again.', 'error');
+            listingsGrid.innerHTML = `<div class="col-12"><div class="alert alert-danger">Failed to load listings. Please try refreshing.</div></div>`;
         } finally {
+            loader.style.display = 'none';
             isLoading = false;
         }
     }
 
     function handleInfiniteScroll() {
         const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
-        if (clientHeight + scrollTop >= scrollHeight - 300) {
-            fetchAndRenderListings();
+        const hasMore = listingsGrid.children.length < totalListings;
+        if (clientHeight + scrollTop >= scrollHeight - 300 && hasMore) {
+            fetchListings();
         }
     }
 
-    // --- Initialization ---
-    function init() {
-        listingsContainer.innerHTML = ''; // Clear existing content
-        setupMasonryGrid();
-        fetchAndRenderListings();
+    function initListingsPage() {
+        const filterForm = document.getElementById('listingsFilterForm');
+        const sortSelect = document.getElementById('sortListings');
+        const clearFiltersBtn = document.getElementById('clear-filters-btn');
+
+        fetchListings(true);
+
         window.addEventListener('scroll', handleInfiniteScroll);
+
+        if (filterForm) {
+            filterForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const params = new URLSearchParams();
+                const city = document.getElementById('filterCity').value;
+                const type = document.getElementById('filterType').value;
+                const price = document.getElementById('filterPrice').value;
+                if (city) params.set('city', city);
+                if (type) params.set('htype', type);
+                if (price) params.set('maxRent', price);
+                
+                history.pushState(null, '', `?${params.toString()}`);
+                fetchListings(true);
+            });
+        }
+
+        if (sortSelect) {
+            sortSelect.addEventListener('change', () => {
+                 const params = new URLSearchParams(window.location.search);
+                 params.set('sort', sortSelect.value);
+                 history.pushState(null, '', `?${params.toString()}`);
+                fetchListings(true);
+            });
+        }
         
-        // Handle resizing
-        let resizeTimeout;
-        window.addEventListener('resize', () => {
-            clearTimeout(resizeTimeout);
-            resizeTimeout = setTimeout(() => {
-                listingsContainer.innerHTML = '';
-                setupMasonryGrid();
-                listings.forEach(appendListing);
-            }, 300);
+        if(clearFiltersBtn) {
+            clearFiltersBtn.addEventListener('click', () => {
+                if(filterForm) filterForm.reset();
+                if(sortSelect) sortSelect.value = 'newest';
+                history.pushState(null, '', window.location.pathname);
+
+                document.getElementById('filterCity').value = '';
+                document.getElementById('filterType').value = '';
+                document.getElementById('filterPrice').value = '';
+
+                fetchListings(true);
+            });
+        }
+        
+        window.addEventListener('popstate', () => {
+            const params = new URLSearchParams(window.location.search);
+            if (filterForm) {
+                document.getElementById('filterCity').value = params.get('city') || '';
+                document.getElementById('filterType').value = params.get('htype') || '';
+                document.getElementById('filterPrice').value = params.get('maxRent') || '';
+            }
+            if (sortSelect) {
+                sortSelect.value = params.get('sort') || 'newest';
+            }
+            fetchListings(true);
         });
     }
 
-    init();
+    initListingsPage();
 });

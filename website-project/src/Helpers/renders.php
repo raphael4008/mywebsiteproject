@@ -2,24 +2,46 @@
 
 namespace App\Helpers;
 
-function render(string $template, array $data = []): string
+function render(string $template, array $data = [], string $layout = 'layout'): void
 {
-    $layoutPath = __DIR__ . '/../../templates/layout.php';
+    $layoutPath = __DIR__ . '/../../templates/' . $layout . '.php';
     $templatePath = __DIR__ . '/../../templates/' . $template . '.php';
 
     if (!file_exists($layoutPath) || !file_exists($templatePath)) {
-        return "Error: Template not found.";
+        echo "Error: Template not found.";
+        return;
     }
 
-    $content = file_get_contents($templatePath);
-    $layout = file_get_contents($layoutPath);
+    // Make data available to the template
+    extract($data);
 
-    $output = str_replace('{{ content }}', $content, $layout);
-    $output = str_replace('{{ basePath }}', $GLOBALS['basePath'] ?? '', $output);
+    // Capture the content of the main template
+    ob_start();
+    include $templatePath;
+    $content = ob_get_clean();
 
-    foreach ($data as $key => $value) {
-        $output = str_replace("{{ " . $key . " }}", $value, $output);
-    }
+    // The layout will have access to the original data and the captured content
+    $data['content'] = $content;
 
-    return $output;
+    // Create a function to replace placeholders
+    $render_layout = function ($path, $data) {
+        extract($data);
+        ob_start();
+        include $path;
+        $layout_content = ob_get_clean();
+
+        // Replace placeholders
+        $layout_content = str_replace('{{ content }}', $data['content'], $layout_content);
+        $layout_content = str_replace('{{ basePath }}', $GLOBALS['basePath'] ?? '', $layout_content);
+        foreach ($data as $key => $value) {
+            if ($key === 'content')
+                continue; // Already replaced
+            if (!is_array($value) && !is_object($value)) {
+                $layout_content = str_replace("{{ " . $key . " }}", $value, $layout_content);
+            }
+        }
+        echo $layout_content;
+    };
+
+    $render_layout($layoutPath, $data);
 }

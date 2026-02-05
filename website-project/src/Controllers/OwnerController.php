@@ -7,9 +7,11 @@ use App\Models\Reservation;
 use App\Models\OwnerPayment as Payment;
 use App\Models\User;
 
-class OwnerController extends BaseController {
+class OwnerController extends BaseController
+{
 
-    public function streamDashboardStats() {
+    public function streamDashboardStats()
+    {
         header('Content-Type: text/event-stream');
         header('Cache-Control: no-cache');
         header('Connection: keep-alive');
@@ -20,14 +22,14 @@ class OwnerController extends BaseController {
 
             $totalListings = Listing::search(['owner_id' => $ownerId])['total'];
             $activeListings = Listing::search(['owner_id' => $ownerId, 'status' => 'AVAILABLE'])['total'];
-            
+
             $pdo = \App\Config\DatabaseConnection::getInstance()->getConnection();
             $stmt = $pdo->prepare('SELECT SUM(views) FROM listings WHERE owner_id = ?');
             $stmt->execute([$ownerId]);
             $totalViews = $stmt->fetchColumn();
 
             $payments = Payment::findByOwnerId($ownerId);
-            $totalEarnings = array_reduce($payments, function($carry, $payment) {
+            $totalEarnings = array_reduce($payments, function ($carry, $payment) {
                 return $carry + $payment['amount'];
             }, 0);
 
@@ -39,28 +41,33 @@ class OwnerController extends BaseController {
             ];
 
             echo "data: " . json_encode($data) . "\n\n";
-            
+
             ob_flush();
             flush();
-            
+
+            if (connection_aborted()) {
+                break;
+            }
+
             sleep(5);
         }
     }
 
-    public function getDashboardStats() {
+    public function getDashboardStats()
+    {
         $user = JwtMiddleware::authorize();
         $ownerId = $user['id'];
 
         $totalListings = Listing::search(['owner_id' => $ownerId])['total'];
         $activeListings = Listing::search(['owner_id' => $ownerId, 'status' => 'AVAILABLE'])['total'];
-        
+
         $pdo = \App\Config\DatabaseConnection::getInstance()->getConnection();
         $stmt = $pdo->prepare('SELECT SUM(views) FROM listings WHERE owner_id = ?');
         $stmt->execute([$ownerId]);
         $totalViews = $stmt->fetchColumn();
 
         $payments = Payment::findByOwnerId($ownerId);
-        $totalEarnings = array_reduce($payments, function($carry, $payment) {
+        $totalEarnings = array_reduce($payments, function ($carry, $payment) {
             return $carry + $payment['amount'];
         }, 0);
 
@@ -75,32 +82,31 @@ class OwnerController extends BaseController {
     /**
      * New method to fetch owner's listings with detailed stats.
      */
-    public function getMyListings() {
+    public function getMyListings()
+    {
         // 1. Security: Validate JWT and ensure 'owner' role.
         $user = JwtMiddleware::authorizeWithRole('owner');
         $ownerId = $user['id'];
 
         // 2. Query: Fetch all listings for the owner
         $ownerListings = Listing::search(['owner_id' => $ownerId, 'limit' => -1])['data'];
-        
+
         if (!$ownerListings) {
             $this->jsonResponse(['status' => 'success', 'data' => [
-                'listings' => [],
-                'stats' => [
-                    'total_listings' => 0,
-                    'total_views' => 0,
-                    'occupancy_rate' => 0
-                ]
-            ]]);
+                    'listings' => [],
+                    'stats' => [
+                        'total_listings' => 0,
+                        'total_views' => 0,
+                        'occupancy_rate' => 0
+                    ]
+                ]]);
             return;
         }
 
         // 3. Stats Calculation
         $total_listings = count($ownerListings);
-        
-        // total_views: This requires a schema change (e.g., an integer 'views' column on the listings table).
-        // For now, we will return a placeholder value. We can sum the non-existent column for future-proofing.
-        $total_views = array_reduce($ownerListings, function($sum, $item) {
+
+        $total_views = array_reduce($ownerListings, function ($sum, $item) {
             return $sum + ($item['views'] ?? 0);
         }, 0);
 
@@ -119,28 +125,31 @@ class OwnerController extends BaseController {
                 'listings' => $ownerListings,
                 'stats' => [
                     'total_listings' => $total_listings,
-                    'total_views' => $total_views, // Placeholder, see comment above
+                    'total_views' => $total_views,
                     'occupancy_rate' => $occupancy_rate
                 ]
             ]
         ]);
     }
 
-    public function getMessages() {
+    public function getMessages()
+    {
         $user = JwtMiddleware::authorize();
         $ownerId = $user['id'];
         $messages = \App\Models\Message::findByReceiverId($ownerId);
         $this->jsonResponse($messages);
     }
 
-    public function getListings() {
+    public function getListings()
+    {
         $user = JwtMiddleware::authorize();
         $ownerId = $user['id'];
         $listings = Listing::search(['owner_id' => $ownerId]);
         $this->jsonResponse($listings['data']);
     }
 
-    public function deleteListing($id) {
+    public function deleteListing($id)
+    {
         $listing = Listing::find($id);
         $ownerId = JwtMiddleware::authorize()['id'];
 
@@ -158,15 +167,17 @@ class OwnerController extends BaseController {
         $this->jsonResponse(['success' => true]);
     }
 
-    public function getProfile() {
+    public function getProfile()
+    {
         $user = JwtMiddleware::authorize();
         $ownerId = $user['id'];
         $userData = User::find($ownerId);
         unset($userData['password']);
         $this->jsonResponse($userData);
     }
-    
-    public function updateProfile() {
+
+    public function updateProfile()
+    {
         $data = json_decode(file_get_contents('php://input'), true);
         $user = JwtMiddleware::authorize();
         $ownerId = $user['id'];
@@ -177,12 +188,13 @@ class OwnerController extends BaseController {
         $this->jsonResponse(['success' => true]);
     }
 
-    public function getReservations() {
+    public function getReservations()
+    {
         $user = JwtMiddleware::authorize();
         $ownerId = $user['id'];
         $reservations = Reservation::getAll(['owner_id' => $ownerId]);
-        
-        $formattedReservations = array_map(function($reservation) {
+
+        $formattedReservations = array_map(function ($reservation) {
             $reservation['tenant_name'] = $reservation['user_name'] ?? 'N/A';
             unset($reservation['user_name']);
             return $reservation;
@@ -191,7 +203,8 @@ class OwnerController extends BaseController {
         $this->jsonResponse($formattedReservations);
     }
 
-    public function getActivities() {
+    public function getActivities()
+    {
         $user = JwtMiddleware::authorize();
         $ownerId = $user['id'];
         $activities = [];
@@ -216,7 +229,7 @@ class OwnerController extends BaseController {
             ];
         }
 
-        usort($activities, function($a, $b) {
+        usort($activities, function ($a, $b) {
             return strtotime($b['date']) - strtotime($a['date']);
         });
 
@@ -224,35 +237,64 @@ class OwnerController extends BaseController {
         $this->jsonResponse($activities);
     }
 
-    public function getPayments() {
+    public function getPayments()
+    {
         $user = JwtMiddleware::authorize();
         $ownerId = $user['id'];
         $payments = Payment::findByOwnerId($ownerId);
         $this->jsonResponse($payments);
     }
 
-    public function getFinancials() {
+    public function getFinancials()
+    {
         $user = JwtMiddleware::authorize();
         $ownerId = $user['id'];
+        $payments = Payment::findByOwnerId($ownerId);
+
+        $totalRevenue = 0;
+        $monthlyEarnings = 0;
+        $pendingPayouts = 0;
+
+        foreach ($payments as $payment) {
+            if ($payment['status'] === 'succeeded') {
+                $totalRevenue += $payment['amount'];
+                if (date('Y-m', strtotime($payment['created_at'])) === date('Y-m')) {
+                    $monthlyEarnings += $payment['amount'];
+                }
+                // Assuming all successful payments are pending payout for now
+                $pendingPayouts += $payment['amount'];
+            }
+        }
+
         $this->jsonResponse([
-            'totalRevenue' => 120000,
-            'monthlyEarnings' => 15000,
-            'pendingPayouts' => 5000,
+            'totalRevenue' => $totalRevenue,
+            'monthlyEarnings' => $monthlyEarnings,
+            'pendingPayouts' => $pendingPayouts,
         ]);
     }
 
-    public function getTransactions() {
+    public function getTransactions()
+    {
         $user = JwtMiddleware::authorize();
         $ownerId = $user['id'];
-        $transactions = [
-            ['date' => '2024-01-10', 'type' => 'Payout', 'property' => 'Cozy Apartment in Nairobi', 'amount' => 5000, 'status' => 'Completed'],
-            ['date' => '2024-01-05', 'type' => 'Booking', 'property' => 'Spacious Villa in Mombasa', 'amount' => 10000, 'status' => 'Completed'],
-            ['date' => '2024-01-02', 'type' => 'Booking', 'property' => 'Cozy Apartment in Nairobi', 'amount' => 5000, 'status' => 'Completed']
-        ];
+        $payments = Payment::findByOwnerId($ownerId);
+
+        $transactions = [];
+        foreach ($payments as $payment) {
+            $transactions[] = [
+                'date' => date('Y-m-d', strtotime($payment['created_at'])),
+                'type' => $payment['payment_method'],
+                'property' => $payment['property_title'],
+                'amount' => $payment['amount'],
+                'status' => $payment['status'],
+            ];
+        }
+
         $this->jsonResponse($transactions);
     }
 
-    public function cancelReservation($id) {
+    public function cancelReservation($id)
+    {
         $user = JwtMiddleware::authorize();
         $ownerId = $user['id'];
         $reservation = Reservation::findById($id);
@@ -272,7 +314,8 @@ class OwnerController extends BaseController {
         $this->jsonResponse(['success' => true]);
     }
 
-    public function getUnavailability($listingId) {
+    public function getUnavailability($listingId)
+    {
         $ownerId = JwtMiddleware::authorize()['id'];
         $listing = Listing::find($listingId);
 
@@ -285,7 +328,8 @@ class OwnerController extends BaseController {
         $this->jsonResponse($unavailability);
     }
 
-    public function addUnavailability($listingId) {
+    public function addUnavailability($listingId)
+    {
         $ownerId = JwtMiddleware::authorize()['id'];
         $listing = Listing::find($listingId);
 
@@ -309,7 +353,8 @@ class OwnerController extends BaseController {
         $this->jsonResponse(['success' => true, 'id' => $id]);
     }
 
-    public function deleteUnavailability($unavailabilityId) {
+    public function deleteUnavailability($unavailabilityId)
+    {
         $ownerId = JwtMiddleware::authorize()['id'];
         $unavailability = \App\Models\PropertyUnavailability::find($unavailabilityId);
 

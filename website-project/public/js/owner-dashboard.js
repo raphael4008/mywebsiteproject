@@ -97,28 +97,28 @@ document.addEventListener('DOMContentLoaded', async () => { // Made async
 });
 
 function checkAuth() {
-    // const token = localStorage.getItem('token');
-    // const userString = localStorage.getItem('user');
+    const token = localStorage.getItem('token');
+    const userString = localStorage.getItem('user');
 
-    // if (!token || !userString) {
-    //     window.location.href = '../login.php?redirect=owners/index.php';
-    //     return;
-    // }
+    if (!token || !userString) {
+        window.location.href = '../login.php?redirect=owners/index.php';
+        return;
+    }
 
-    // try {
-    //     const user = JSON.parse(userString);
-    //     if (user.role !== 'owner') {
-    //         console.warn('User is not an owner. Redirecting.');
-    //         window.location.href = '../login.php?redirect=owners/index.php';
-    //         return; // Added return to prevent further execution
-    //     }
-    //     AppState.user = user; // Store user data in AppState
-    //     // Display owner name
-    //     document.getElementById('ownerNameDisplay').textContent = AppState.user.name || 'Owner';
-    // } catch (error) {
-    //     console.error('Failed to parse user data, redirecting to login.', error);
-    //     window.location.href = '../login.html?redirect=owners/index.html';
-    // }
+    try {
+        const user = JSON.parse(userString);
+        if (user.role !== 'owner') {
+            console.warn('User is not an owner. Redirecting.');
+            window.location.href = '../login.php?redirect=owners/index.php';
+            return; // Added return to prevent further execution
+        }
+        AppState.user = user; // Store user data in AppState
+        // Display owner name
+        document.getElementById('ownerNameDisplay').textContent = AppState.user.name || 'Owner';
+    } catch (error) {
+        console.error('Failed to parse user data, redirecting to login.', error);
+        window.location.href = '../login.html?redirect=owners/index.html';
+    }
 }
 
 function showSection(sectionName, pushState = true) {
@@ -506,7 +506,7 @@ async function openEditModal(id) {
 
 async function loadReservations() {
     await loadContentIntoContainer('reservationsList', async () => {
-        return await apiClient.request('/landlord/reservations');
+        return await apiClient.request('/owner/reservations');
     }, (reservations) => {
         if (reservations.length === 0) {
             return '<div class="alert alert-info"><i class="fas fa-info-circle me-2"></i>No reservations found.</div>';

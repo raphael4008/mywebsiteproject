@@ -2,6 +2,7 @@ import apiClient from './apiClient.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     const neighborhoodList = document.getElementById('neighborhood-list');
+    if (!neighborhoodList) return;
 
     async function loadNeighborhoods() {
         try {

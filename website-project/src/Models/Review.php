@@ -3,7 +3,7 @@ namespace App\Models;
 
 use \PDO;
 use \Exception;
-use App\Models\BaseModel; // Add use statement for BaseModel
+
 
 class Review extends BaseModel {
     protected static $tableName = 'reviews';
@@ -13,7 +13,7 @@ class Review extends BaseModel {
     public static function getAll() {
         try {
             return static::rawQuery("SELECT * FROM " . static::$tableName . " ORDER BY created_at DESC", [], true, PDO::FETCH_ASSOC);
-        } catch (PDOException $e) {
+        } catch (\PDOException $e) {
             // Log error
             throw new Exception("Error fetching reviews");
         }
@@ -56,7 +56,7 @@ class Review extends BaseModel {
 
         try {
             return parent::create($filteredData);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             // Log error
             throw new Exception("Error creating review");
         }
@@ -78,7 +78,7 @@ class Review extends BaseModel {
 
         try {
             return parent::update($id, $filteredData);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             // Log error
             throw new Exception("Error updating review");
         }

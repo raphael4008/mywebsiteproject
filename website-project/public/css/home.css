@@ -1,21 +1,17 @@
 :root {
-    --primary-color: #0d6efd;
-    --dark-bg: #121212;
-    --light-text: #f8f9fa;
-    --secondary-text: #adb5bd;
+    --primary-color: #E87A5D;
+    --dark-bg: #121212; /* Darker background for more contrast */
+    --surface-bg: #1E1E1E; /* Slightly lighter surface */
+    --light-text: #FFFFFF;
+    --secondary-text: #B0B0B0;
+    --radius: 16px; /* Larger radius for a softer look */
+    --shadow: 0 12px 32px rgba(0,0,0,0.3);
 }
-body {
-    background-color: var(--dark-bg);
-    color: var(--light-text);
-}
-.navbar {
-    background: rgba(0,0,0,0.6);
-    backdrop-filter: blur(10px);
-}
+
 /* Part 2.1: Hero Section */
 .hero-section {
     position: relative;
-    height: 70vh;
+    height: 90vh; /* Taller hero section */
     display: flex;
     align-items: center;
     justify-content: center;
@@ -23,6 +19,7 @@ body {
     color: white;
     overflow: hidden;
 }
+
 .hero-background {
     position: absolute;
     top: 0;
@@ -30,90 +27,237 @@ body {
     width: 100%;
     height: 100%;
     background: url('../images/1.jpeg') no-repeat center center/cover;
+    animation: slow-zoom 25s ease-in-out infinite;
     z-index: 1;
 }
+
+@keyframes slow-zoom {
+    0% {
+        transform: scale(1.05);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
 .hero-overlay {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.6);
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.2) 100%); /* Stronger gradient */
     z-index: 2;
 }
+
 .hero-content {
     position: relative;
     z-index: 3;
     padding: 2rem;
+    max-width: 800px; /* Limit content width for better readability */
 }
+
 .hero-content h1 {
-    font-size: 2.5rem;
+    font-size: 3.5rem; /* Larger font size */
     font-weight: 700;
     margin-bottom: 1rem;
+    text-shadow: 0 4px 15px rgba(0,0,0,0.6);
 }
+
 .ai-search-bar {
     max-width: 600px;
-    margin: 0 auto;
+    margin: 2rem auto 0;
     position: relative;
 }
+
 .ai-search-bar input {
     width: 100%;
-    padding: 1rem 4rem 1rem 1.5rem;
+    padding: 1.2rem 4.5rem 1.2rem 2rem; /* Increased padding */
     border-radius: 50px;
-    border: none;
+    border: 1px solid rgba(255,255,255,0.1);
     font-size: 1.1rem;
+    background: rgba(255, 255, 255, 0.05); /* Lighter, glassy background */
+    color: var(--light-text);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
 }
+
+.ai-search-bar input::placeholder {
+    color: var(--secondary-text);
+}
+
 .ai-search-bar button {
     position: absolute;
-    right: 8px;
+    right: 10px;
     top: 50%;
     transform: translateY(-50%);
     background: var(--primary-color);
     color: white;
     border: none;
     border-radius: 50%;
-    width: 45px;
-    height: 45px;
-    font-size: 1.2rem;
+    width: 50px; /* Larger button */
+    height: 50px;
+    font-size: 1.5rem; /* Larger icon */
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.3s;
 }
+
+.ai-search-bar button:hover {
+    background-color: #d76a4d;
+    transform: translateY(-50%) scale(1.05);
+}
+
 /* Part 2.2: Featured Properties */
 .featured-properties {
-    padding: 4rem 0;
+    padding: 6rem 2rem; /* Increased padding */
+    background-color: var(--dark-bg);
 }
+
+.featured-properties h2 {
+    color: var(--primary-color);
+    text-align: center;
+    font-size: 2.5rem;
+    margin-bottom: 3rem;
+}
+
 .featured-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 2rem;
+    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+    gap: 2.5rem;
 }
-.listing-card {
-    background: #1e1e1e;
-    border-radius: 15px;
+
+/* New styling for property cards */
+.property-card {
+    background: var(--surface-bg);
+    border-radius: var(--radius);
     overflow: hidden;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.05);
 }
-.listing-card:hover {
+
+.property-card:hover {
     transform: translateY(-10px);
     box-shadow: 0 20px 40px rgba(0,0,0,0.4);
 }
-.listing-card img {
-    width: 100%;
-    height: 200px;
-    object-fit: cover;
+
+.property-card .card-image {
+    height: 250px;
+    background-size: cover;
+    background-position: center;
 }
-.listing-card-content {
+
+.property-card .card-body {
     padding: 1.5rem;
 }
+
+.property-card .card-title {
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: var(--light-text);
+    margin-bottom: 0.5rem;
+}
+
+.property-card .card-text {
+    color: var(--secondary-text);
+    margin-bottom: 1rem;
+}
+
+.property-card .btn-primary {
+    display: inline-block;
+    background: var(--primary-color);
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 30px;
+    text-decoration: none;
+    transition: background-color 0.3s;
+}
+
+.property-card .btn-primary:hover {
+    background-color: #d76a4d;
+}
+
 /* Part 2.3: How it Works */
 .how-it-works {
-    background-color: #1e1e1e;
-    padding: 4rem 0;
+    background-color: var(--dark-bg);
+    padding: 6rem 2rem;
 }
+
+.how-it-works .section-title {
+    text-align: center;
+    font-size: 2.5rem;
+    color: var(--primary-color);
+    margin-bottom: 3rem;
+}
+
+.how-it-works-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2.5rem;
+    text-align: center;
+}
+
+.how-it-works .feature-card {
+    background: var(--surface-bg);
+    padding: 2.5rem;
+    border-radius: var(--radius);
+    transition: transform 0.3s, box-shadow 0.3s;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+.how-it-works .feature-card:hover {
+    transform: translateY(-10px);
+    box-shadow: var(--shadow);
+}
+
 .how-it-works i {
     font-size: 3rem;
     color: var(--primary-color);
+    margin-bottom: 1.5rem;
+    display: block; /* Ensure icon is a block element for centering */
 }
+
+.how-it-works h3 {
+    font-size: 1.5rem;
+    color: var(--light-text);
+    margin-bottom: 1rem;
+}
+
+.how-it-works p {
+    color: var(--secondary-text);
+}
+
 /* Part 2.4: Call to Action */
 .cta-section {
-    padding: 5rem 0;
+    padding: 6rem 2rem;
     text-align: center;
+    background: linear-gradient(45deg, #E87A5D, #c75a3d);
+    color: var(--light-text);
+}
+
+.cta-section h2 {
+    color: var(--light-text);
+    font-size: 2.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.cta-section p {
+    font-size: 1.2rem;
+    margin-bottom: 2.5rem;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.cta-section .btn {
+    font-size: 1.2rem;
+    padding: 1rem 3rem;
+    border-radius: 50px;
+    transition: transform 0.3s, box-shadow 0.3s;
+    background-color: white;
+    color: var(--primary-color);
+    font-weight: 600;
+}
+.cta-section .btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.2);
 }

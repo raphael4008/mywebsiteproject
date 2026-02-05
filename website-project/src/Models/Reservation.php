@@ -3,7 +3,6 @@ namespace App\Models;
 
 use \PDO;
 use \Exception;
-use App\Models\BaseModel; // Add use statement for BaseModel
 use App\Models\Listing; // For updating listing status
 
 class Reservation extends BaseModel {
@@ -43,7 +42,7 @@ class Reservation extends BaseModel {
             $stmt = $pdo->prepare($sql);
             $stmt->execute($args);
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        } catch (PDOException $e) {
+        } catch (\PDOException $e) {
             // Log the error, and return an empty array or rethrow a custom exception
             error_log("Database error in Reservation::getAll(): " . $e->getMessage());
             return [];
@@ -72,7 +71,7 @@ class Reservation extends BaseModel {
             $pdo->commit();
 
             return $reservationId;
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $pdo->rollBack();
             throw $e;
         }

@@ -1,5 +1,6 @@
 <?php
 namespace App\Controllers;
+
 use App\Helpers\Request;
 use App\Config\Config;
 use League\Flysystem\Filesystem;
@@ -11,25 +12,29 @@ use App\Models\Amenity;
 use App\Services\AISearchService;
 use OpenAI;
 
-class ListingController extends BaseController {
+class ListingController extends BaseController
+{
     private $pdo;
 
-    public function __construct() {
+    public function __construct()
+    {
         $this->pdo = \App\Config\DatabaseConnection::getInstance()->getConnection();
     }
 
-    public function search() {
+    public function search()
+    {
         try {
             $params = Request::queryParams();
             $result = Listing::search($params);
-    
+
             if (empty($result['data'])) {
                 $this->jsonErrorResponse('No listings found', 404);
                 return;
             }
-    
+
             $this->jsonResponse(['data' => $result['data'], 'total' => $result['total']]);
-        } catch (\Exception $e) {
+        }
+        catch (\Exception $e) {
             // Log the real error
             error_log($e->getMessage());
             // Return a generic error to the user
@@ -37,18 +42,21 @@ class ListingController extends BaseController {
         }
     }
 
-    public function getAll() {
+    public function getAll()
+    {
         $listings = Listing::all();
         $this->jsonResponse($listings);
     }
 
-    public function getCities() {
+    public function getCities()
+    {
         $stmt = $this->pdo->query("SELECT DISTINCT city FROM listings ORDER BY city ASC");
         $cities = $stmt->fetchAll(\PDO::FETCH_COLUMN);
         $this->jsonResponse($cities);
     }
 
-    public function getById($id) {
+    public function getById($id)
+    {
         $listing = Listing::findByIdWithDetails($id);
 
         if (!$listing) {
@@ -59,10 +67,11 @@ class ListingController extends BaseController {
         $this->jsonResponse($listing);
     }
 
-    public function create() {
-    $data = Request::all();
-    $user = \App\Helpers\JwtMiddleware::authorize();
-        
+    public function create()
+    {
+        $data = Request::all();
+        $user = \App\Helpers\JwtMiddleware::authorize();
+
         $errors = $this->validate($data);
         if (!empty($errors)) {
             $this->jsonErrorResponse('Validation Failed', 400, $errors);
@@ -89,14 +98,16 @@ class ListingController extends BaseController {
             }
 
             $this->jsonResponse(['id' => $listingId], 201);
-        } catch (\Exception $e) {
+        }
+        catch (\Exception $e) {
             $this->jsonErrorResponse('An error occurred while creating the listing: ' . $e->getMessage(), 500);
         }
     }
 
-    public function update($id) {
-    $data = Request::all();
-    $user = \App\Helpers\JwtMiddleware::authorize();
+    public function update($id)
+    {
+        $data = Request::all();
+        $user = \App\Helpers\JwtMiddleware::authorize();
 
         $listing = Listing::find($id);
 
@@ -115,9 +126,9 @@ class ListingController extends BaseController {
             $this->jsonErrorResponse('Validation Failed', 400, $errors);
             return;
         }
-        
+
         $this->convertNamesToIds($data);
-        
+
         try {
             Listing::update($id, $data);
 
@@ -129,14 +140,16 @@ class ListingController extends BaseController {
             }
 
             $this->jsonResponse(['success' => true]);
-        } catch (\Exception $e) {
+        }
+        catch (\Exception $e) {
             $this->jsonErrorResponse('An error occurred while updating the listing.', 500);
         }
     }
 
-    public function delete($id) {
-    $user = \App\Helpers\JwtMiddleware::authorize();
-        
+    public function delete($id)
+    {
+        $user = \App\Helpers\JwtMiddleware::authorize();
+
         $listing = Listing::find($id);
 
         if (!$listing) {
@@ -148,25 +161,29 @@ class ListingController extends BaseController {
             $this->jsonErrorResponse('You are not authorized to delete this listing', 403);
             return;
         }
-        
+
         if (Listing::delete($id)) {
             $this->jsonResponse(['success' => true]);
-        } else {
+        }
+        else {
             $this->jsonErrorResponse('An error occurred while deleting the listing.', 500);
         }
     }
 
-    public function getFeatured() {
+    public function getFeatured()
+    {
         try {
             $listings = Listing::getFeatured(3); // Get 3 featured listings
             $this->jsonResponse(['data' => $listings]);
-        } catch (\Exception $e) {
+        }
+        catch (\Exception $e) {
             error_log($e->getMessage());
             $this->jsonErrorResponse('An error occurred while fetching featured listings.', 500);
         }
     }
 
-    public function aiSearch() {
+    public function aiSearch()
+    {
         try {
             $userQuery = Request::input('query', '');
 
@@ -192,7 +209,7 @@ class ListingController extends BaseController {
 
             $aiService = new AISearchService();
             $searchParams = $aiService->getParamsFromQuery($userQuery, $context);
-            
+
             // Use the extracted params to search for listings
             $result = Listing::search($searchParams);
 
@@ -203,13 +220,15 @@ class ListingController extends BaseController {
 
             $this->jsonResponse(['data' => $result['data'], 'total' => $result['total']]);
 
-        } catch (\Exception $e) {
+        }
+        catch (\Exception $e) {
             error_log('AI Search Error: ' . $e->getMessage());
             $this->jsonErrorResponse($e->getMessage(), 500);
         }
     }
 
-    private function validate($data): array {
+    private function validate($data): array
+    {
         $errors = [];
 
         if (empty($data['title'])) {
@@ -228,7 +247,8 @@ class ListingController extends BaseController {
         $allowedHtypes = $htypeStmt->fetchAll(\PDO::FETCH_COLUMN);
         if (empty($data['htype'])) {
             $errors['htype'] = 'House type is required';
-        } elseif (!in_array(strtoupper($data['htype']), array_map('strtoupper', $allowedHtypes))) {
+        }
+        elseif (!in_array(strtoupper($data['htype']), array_map('strtoupper', $allowedHtypes))) {
             $errors['htype'] = 'Invalid house type. Allowed types are: ' . implode(', ', $allowedHtypes);
         }
 
@@ -236,29 +256,32 @@ class ListingController extends BaseController {
         $allowedStyles = $styleStmt->fetchAll(\PDO::FETCH_COLUMN);
         if (empty($data['style'])) {
             $errors['style'] = 'Style is required';
-        } elseif (!in_array(strtoupper($data['style']), array_map('strtoupper', $allowedStyles))) {
+        }
+        elseif (!in_array(strtoupper($data['style']), array_map('strtoupper', $allowedStyles))) {
             $errors['style'] = 'Invalid style. Allowed styles are: ' . implode(', ', $allowedStyles);
         }
 
         if (empty($data['rent_amount'])) {
             $errors['rent_amount'] = 'Rent amount is required';
-        } elseif (!is_numeric($data['rent_amount']) || $data['rent_amount'] <= 0) {
+        }
+        elseif (!is_numeric($data['rent_amount']) || $data['rent_amount'] <= 0) {
             $errors['rent_amount'] = 'Rent amount must be a positive number';
         }
 
         if (empty($data['deposit_amount'])) {
             $errors['deposit_amount'] = 'Deposit amount is required';
-        } elseif (!is_numeric($data['deposit_amount']) || $data['deposit_amount'] <= 0) {
+        }
+        elseif (!is_numeric($data['deposit_amount']) || $data['deposit_amount'] <= 0) {
             $errors['deposit_amount'] = 'Deposit amount must be a positive number';
         }
 
         return $errors;
     }
-    
+
     private function handleImageUploads(int $listingId, array $files): array
     {
         $uploadedPaths = [];
-    $uploadDir = Config::get('FILESYSTEM_ROOT');
+        $uploadDir = Config::get('FILESYSTEM_ROOT');
 
         if (!is_dir($uploadDir)) {
             mkdir($uploadDir, 0755, true);
@@ -286,20 +309,22 @@ class ListingController extends BaseController {
 
                 $stream = fopen($tmp_name, 'r+');
                 $filesystem->writeStream($newFileName, $stream);
-                
+
                 if (is_resource($stream)) {
                     fclose($stream);
                 }
 
                 $uploadedPaths[] = 'images/' . $newFileName;
-            } else {
+            }
+            else {
                 error_log("File upload error for " . $name . ": " . $files['images']['error'][$key]);
             }
         }
         return $uploadedPaths;
     }
 
-    private function convertNamesToIds(array &$data) {
+    private function convertNamesToIds(array &$data)
+    {
         if (isset($data['htype'])) {
             $htypeStmt = $this->pdo->prepare("SELECT id FROM house_types WHERE name = ?");
             $htypeStmt->execute([strtoupper($data['htype'])]);
