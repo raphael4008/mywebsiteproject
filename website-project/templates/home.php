@@ -1,12 +1,16 @@
 <!-- Hero Section -->
-<div class="container-fluid hero-section" style="position: relative; height: 60vh; background: url('{{ basePath }}/images/b.jpg') no-repeat center center; background-size: cover;">
-    <div class="hero-overlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5);"></div>
-    <div class="container hero-content text-center" style="position: relative; z-index: 2; top: 50%; transform: translateY(-50%); color: white;">
+<div class="container-fluid hero-section"
+    style="position: relative; height: 60vh; background: url('{{ basePath }}/images/b.jpg') no-repeat center center; background-size: cover;">
+    <div class="hero-overlay"
+        style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5);">
+    </div>
+    <div class="container hero-content text-center"
+        style="position: relative; z-index: 2; top: 50%; transform: translateY(-50%); color: white;">
         <h1 class="display-4 fw-bold">Your Next Home Awaits</h1>
         <p class="lead">Discover the perfect place to live with our powerful and intuitive search tools.</p>
         <div class="mt-4">
-            <a href="/listings" class="btn btn-primary btn-lg me-2">Explore Listings</a>
-            <a href="/about" class="btn btn-outline-light btn-lg">Learn More</a>
+            <a href="{{ basePath }}/listings" class="btn btn-primary btn-lg me-2">Explore Listings</a>
+            <a href="{{ basePath }}/about" class="btn btn-outline-light btn-lg">Learn More</a>
         </div>
     </div>
 </div>
@@ -19,7 +23,8 @@
                 <div class="card-body">
                     <h2 class="card-title text-center mb-4">Search with Natural Language</h2>
                     <form id="ai-search-form" class="d-flex">
-                        <input type="text" id="ai-search-input" class="form-control form-control-lg" placeholder="e.g., 'A spacious 2-bedroom apartment near Yaya Centre'">
+                        <input type="text" id="ai-search-input" class="form-control form-control-lg"
+                            placeholder="e.g., 'A spacious 2-bedroom apartment near Yaya Centre'">
                         <button type="submit" id="ai-search-btn" class="btn btn-primary btn-lg ms-2">
                             <i class="fas fa-search"></i>
                         </button>
@@ -81,8 +86,9 @@
             <div class="card shadow-lg">
                 <div class="card-body">
                     <h2 class="card-title">List Your Property with Us</h2>
-                    <p class="card-text">Reach a wide audience of potential buyers and renters by listing your property on our platform.</p>
-                    <a href="/register" class="btn btn-primary btn-lg">Become a Partner</a>
+                    <p class="card-text">Reach a wide audience of potential buyers and renters by listing your property
+                        on our platform.</p>
+                    <a href="{{ basePath }}/register" class="btn btn-primary btn-lg">Become a Partner</a>
                 </div>
             </div>
         </div>

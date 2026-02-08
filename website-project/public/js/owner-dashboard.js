@@ -9,7 +9,7 @@ const ApiEndpoints = {
     PROPERTIES: '/owner/my-listings',
     RESERVATIONS: '/owner/reservations',
     LISTINGS: '/listings',
-    CITIES: '/cities', 
+    CITIES: '/cities',
     HOUSE_TYPES: '/house-types',
     FINANCIALS: '/owner/financials',
     TRANSACTIONS: '/owner/transactions',
@@ -72,7 +72,7 @@ async function populateDropdown(selectElementId, endpoint, valueKey, textKey, se
 document.addEventListener('DOMContentLoaded', async () => { // Made async
     checkAuth();
     setupNavigation();
-    
+
     // Fetch and store cities and house types globally
     AppState.cities = await populateDropdown('addPropertyForm [name="city"]', ApiEndpoints.CITIES, 'name', 'name');
     AppState.houseTypes = await populateDropdown('addPropertyForm [name="htype"]', ApiEndpoints.HOUSE_TYPES, 'type', 'type');
@@ -101,7 +101,7 @@ function checkAuth() {
     const userString = localStorage.getItem('user');
 
     if (!token || !userString) {
-        window.location.href = '../login.php?redirect=owners/index.php';
+        window.location.href = `${window.basePath}/login?redirect=owner/dashboard`;
         return;
     }
 
@@ -109,7 +109,7 @@ function checkAuth() {
         const user = JSON.parse(userString);
         if (user.role !== 'owner') {
             console.warn('User is not an owner. Redirecting.');
-            window.location.href = '../login.php?redirect=owners/index.php';
+            window.location.href = `${window.basePath}/login?redirect=owner/dashboard`;
             return; // Added return to prevent further execution
         }
         AppState.user = user; // Store user data in AppState
@@ -117,7 +117,7 @@ function checkAuth() {
         document.getElementById('ownerNameDisplay').textContent = AppState.user.name || 'Owner';
     } catch (error) {
         console.error('Failed to parse user data, redirecting to login.', error);
-        window.location.href = '../login.html?redirect=owners/index.html';
+        window.location.href = `${window.basePath}/login?redirect=owner/dashboard`;
     }
 }
 
@@ -296,7 +296,7 @@ async function loadOverview() {
 
     const eventSource = new EventSource('api/owner/stats/stream');
 
-    eventSource.onmessage = function(event) {
+    eventSource.onmessage = function (event) {
         const stats = JSON.parse(event.data);
         document.getElementById('totalProperties').textContent = stats.totalListings || '0';
         document.getElementById('activeListings').textContent = stats.activeListings || '0';
@@ -304,7 +304,7 @@ async function loadOverview() {
         document.getElementById('totalRevenue').textContent = 'KES ' + Number(stats.totalEarnings || 0).toLocaleString();
     };
 
-    eventSource.onerror = function(err) {
+    eventSource.onerror = function (err) {
         console.error('EventSource failed:', err);
         eventSource.close();
     };
@@ -332,7 +332,7 @@ async function loadProperties() {
         return await apiClient.request(ApiEndpoints.PROPERTIES);
     }, (response) => {
         const { listings, stats } = response.data;
-        
+
         // Update overview stats
         document.getElementById('totalProperties').textContent = stats.total_listings || '0';
         document.getElementById('totalViews').textContent = stats.total_views || '0';
@@ -405,10 +405,10 @@ async function openAvailabilityModal(listingId) {
 async function loadUnavailability(listingId) {
     const listContainer = document.getElementById('unavailabilityList');
     listContainer.innerHTML = '<div class="text-center"><div class="spinner-border spinner-border-sm"></div></div>';
-    
+
     try {
         const unavailableDates = await apiClient.request(`/owner/listings/${listingId}/unavailability`);
-        
+
         const calendarDates = [];
         const listHtml = unavailableDates.map(item => {
             calendarDates.push({
@@ -425,7 +425,7 @@ async function loadUnavailability(listingId) {
                 </div>
             `;
         }).join('');
-        
+
         listContainer.innerHTML = listHtml || '<p class="text-muted text-center">No dates blocked yet.</p>';
         availabilityCalendar.settings.range.disabled = calendarDates;
         availabilityCalendar.update();
@@ -471,7 +471,7 @@ document.getElementById('addUnavailabilityForm').addEventListener('submit', asyn
     const listingId = document.getElementById('unavailabilityListingId').value;
     const startDate = document.getElementById('unavailabilityStartDate').value;
     const endDate = document.getElementById('unavailabilityEndDate').value;
-    
+
     if (listingId && startDate && endDate) {
         await addUnavailability(listingId, startDate, endDate);
     }
@@ -524,22 +524,22 @@ async function loadReservations() {
                 </thead>
                 <tbody>
                     ${reservations.map(res => {
-                        let statusBadge;
-                        switch (res.status.toUpperCase()) {
-                            case 'CONFIRMED':
-                                statusBadge = `<span class="badge bg-success">Confirmed</span>`;
-                                break;
-                            case 'PENDING':
-                                statusBadge = `<span class="badge bg-warning text-dark">Pending</span>`;
-                                break;
-                            case 'FAILED':
-                            case 'CANCELLED':
-                                statusBadge = `<span class="badge bg-danger">Failed</span>`;
-                                break;
-                            default:
-                                statusBadge = `<span class="badge bg-secondary">${res.status}</span>`;
-                        }
-                        return `
+            let statusBadge;
+            switch (res.status.toUpperCase()) {
+                case 'CONFIRMED':
+                    statusBadge = `<span class="badge bg-success">Confirmed</span>`;
+                    break;
+                case 'PENDING':
+                    statusBadge = `<span class="badge bg-warning text-dark">Pending</span>`;
+                    break;
+                case 'FAILED':
+                case 'CANCELLED':
+                    statusBadge = `<span class="badge bg-danger">Failed</span>`;
+                    break;
+                default:
+                    statusBadge = `<span class="badge bg-secondary">${res.status}</span>`;
+            }
+            return `
                             <tr>
                                 <td>${res.listing_title || 'N/A'}</td>
                                 <td>${res.tenant_name || 'N/A'}</td>
@@ -550,7 +550,7 @@ async function loadReservations() {
                                 </td>
                             </tr>
                         `;
-                    }).join('')}
+        }).join('')}
                 </tbody>
             </table>
         `;
@@ -638,7 +638,7 @@ function setupAddPropertyForm() {
 
         try {
             const formData = new FormData(form);
-            
+
             // Implement CSRF protection.
             // 1. Generate a CSRF token on the server and add it to a meta tag in your HTML.
             //    <meta name="csrf-token" content="your-token-here">
@@ -650,14 +650,14 @@ function setupAddPropertyForm() {
             }
 
             await apiClient.request('/listings', 'POST', formData, headers, true); // true for multipart/form-data
- 
+
             form.reset();
             modal.hide();
             showNotification('Property added successfully!', 'success');
-            
+
             // Refresh just the properties list
-            await loadProperties(); 
-            
+            await loadProperties();
+
         } catch (error) {
             console.error('Error adding property:', error);
             let errorMessage = 'An unexpected error occurred.';
@@ -671,67 +671,67 @@ function setupAddPropertyForm() {
             } else if (error.message) {
                 errorMessage = error.message;
             }
-                        showNotification('Error adding property: ' + errorMessage, 'error');
-                    } finally {
-                        btn.disabled = false;
-                        btn.textContent = 'Save Property';
-                    }
-                });
-            }
-            
-            function setupEditPropertyForm() {
-                const form = document.getElementById('editPropertyForm');
-                const modalElement = document.getElementById('editPropertyModal');
-                const modal = new bootstrap.Modal(modalElement);
-            
-                form.addEventListener('submit', async (e) => {
-                    e.preventDefault();
-            
-                    if (!validateForm(form)) {
-                        showNotification('Please correct the errors in the form.', 'error');
-                        return;
-                    }
-            
-                    const btn = form.querySelector('button[type="submit"]');
-                    btn.disabled = true;
-                    btn.textContent = 'Saving...';
-            
-                    try {
-                        const formData = new FormData(form);
-                        const id = formData.get('id');
-                        
-                        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-                        const headers = {};
-                        if (csrfToken) {
-                            headers['X-CSRF-TOKEN'] = csrfToken;
-                        }
+            showNotification('Error adding property: ' + errorMessage, 'error');
+        } finally {
+            btn.disabled = false;
+            btn.textContent = 'Save Property';
+        }
+    });
+}
 
-                        // NOTE: FormData with PUT in PHP is tricky.
-                        // The backend must be adapted to handle multipart/form-data for PUT requests,
-                        // or we must serialize the form data differently.
-                        // For now, we assume the backend handles it.
-                        await apiClient.request(`/listings/${id}`, 'PUT', formData, headers, true); // true for multipart
-            
-                        form.reset();
-                        modal.hide();
-                        showNotification('Property updated successfully!', 'success');
-                        
-                        await loadProperties(); 
-                        
-                    } catch (error) {
-                        console.error('Error updating property:', error);
-                        let errorMessage = 'An unexpected error occurred.';
-                        // Basic error handling, can be improved
-                        if (error.message) {
-                            errorMessage = error.message;
-                        }
-                        showNotification('Error updating property: ' + errorMessage, 'error');
-                    } finally {
-                        btn.disabled = false;
-                        btn.textContent = 'Save Changes';
-                    }
-                });
+function setupEditPropertyForm() {
+    const form = document.getElementById('editPropertyForm');
+    const modalElement = document.getElementById('editPropertyModal');
+    const modal = new bootstrap.Modal(modalElement);
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        if (!validateForm(form)) {
+            showNotification('Please correct the errors in the form.', 'error');
+            return;
+        }
+
+        const btn = form.querySelector('button[type="submit"]');
+        btn.disabled = true;
+        btn.textContent = 'Saving...';
+
+        try {
+            const formData = new FormData(form);
+            const id = formData.get('id');
+
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+            const headers = {};
+            if (csrfToken) {
+                headers['X-CSRF-TOKEN'] = csrfToken;
             }
+
+            // NOTE: FormData with PUT in PHP is tricky.
+            // The backend must be adapted to handle multipart/form-data for PUT requests,
+            // or we must serialize the form data differently.
+            // For now, we assume the backend handles it.
+            await apiClient.request(`/listings/${id}`, 'PUT', formData, headers, true); // true for multipart
+
+            form.reset();
+            modal.hide();
+            showNotification('Property updated successfully!', 'success');
+
+            await loadProperties();
+
+        } catch (error) {
+            console.error('Error updating property:', error);
+            let errorMessage = 'An unexpected error occurred.';
+            // Basic error handling, can be improved
+            if (error.message) {
+                errorMessage = error.message;
+            }
+            showNotification('Error updating property: ' + errorMessage, 'error');
+        } finally {
+            btn.disabled = false;
+            btn.textContent = 'Save Changes';
+        }
+    });
+}
 
 async function loadMessages() {
     await loadContentIntoContainer('conversationsList', async () => {
@@ -804,27 +804,26 @@ function showConversation(conversation) {
     }).join('');
 
     document.getElementById('conversationMessages').innerHTML = messagesHtml;
-    
+
     const messageInput = document.getElementById('messageInput');
     const sendMessageBtn = document.querySelector('#sendMessageForm button');
-    
+
     messageInput.disabled = false;
     sendMessageBtn.disabled = false;
-    
+
     // You would set up the form submission logic here
     document.getElementById('sendMessageForm').onsubmit = (e) => {
         e.preventDefault();
         const messageText = messageInput.value;
         if (!messageText.trim()) return;
-        
+
         // This part is not fully implemented:
         // You would need an API endpoint to send a message
         console.log(`Sending message to ${conversation.name}: ${messageText}`);
-        
+
         messageInput.value = ''; // Clear input
-        
+
         // For demonstration, you could add the message to the UI directly
         // but it's better to refetch or get confirmation from the server.
     };
 }
-            

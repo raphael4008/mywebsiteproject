@@ -1,21 +1,47 @@
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-<style>
-    .sidebar { min-height: 100vh; background: #1a252f; color: white; }
-    .sidebar .nav-link { color: rgba(255,255,255,0.7); padding: 1rem 1.5rem; }
-    .sidebar .nav-link:hover, .sidebar .nav-link.active { color: white; background: #2c3e50; }
-    .stat-card { border-left: 5px solid var(--primary); }
-</style>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .sidebar {
+            min-height: 100vh;
+            background: #1a252f;
+            color: white;
+        }
+
+        .sidebar .nav-link {
+            color: rgba(255, 255, 255, 0.7);
+            padding: 1rem 1.5rem;
+        }
+
+        .sidebar .nav-link:hover,
+        .sidebar .nav-link.active {
+            color: white;
+            background: #2c3e50;
+        }
+
+        .stat-card {
+            border-left: 5px solid var(--primary);
+        }
+    </style>
+</head>
+<body>
 <div class="d-flex">
     <!-- Sidebar -->
     <div class="sidebar d-flex flex-column flex-shrink-0 p-3" style="width: 280px;">
-        <a href="/" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none px-3">
+        <a href="{{ basePath }}/"
+            class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none px-3">
             <span class="fs-4 fw-bold text-uppercase">Admin Panel</span>
         </a>
         <hr class="border-secondary">
         <ul class="nav nav-pills flex-column mb-auto">
             <li class="nav-item">
-                <a href="#" class="nav-link active" data-section="dashboard"><i class="fas fa-tachometer-alt me-2"></i> Dashboard</a>
+                <a href="#" class="nav-link active" data-section="dashboard"><i class="fas fa-tachometer-alt me-2"></i>
+                    Dashboard</a>
             </li>
             <li>
                 <a href="#" class="nav-link" data-section="listings"><i class="fas fa-list me-2"></i> Listings</a>
@@ -24,15 +50,18 @@
                 <a href="#" class="nav-link" data-section="users"><i class="fas fa-users me-2"></i> Users</a>
             </li>
             <li>
-                <a href="#" class="nav-link" data-section="reservations"><i class="fas fa-calendar-check me-2"></i> Reservations</a>
+                <a href="#" class="nav-link" data-section="reservations"><i class="fas fa-calendar-check me-2"></i>
+                    Reservations</a>
             </li>
             <li>
-                <a href="#" class="nav-link" data-section="amenities"><i class="fas fa-plus-circle me-2"></i> Amenities</a>
+                <a href="#" class="nav-link" data-section="amenities"><i class="fas fa-plus-circle me-2"></i>
+                    Amenities</a>
             </li>
         </ul>
         <hr class="border-secondary">
         <div class="px-3">
-            <a href="#" id="logoutBtn" class="text-white text-decoration-none"><i class="fas fa-sign-out-alt me-2"></i> Logout</a>
+            <a href="#" id="logoutBtn" class="text-white text-decoration-none"><i class="fas fa-sign-out-alt me-2"></i>
+                Logout</a>
         </div>
     </div>
 
@@ -78,7 +107,9 @@
                             </tr>
                         </thead>
                         <tbody id="adminListingsTable">
-                            <tr><td colspan="4" class="text-center py-4">Loading listings...</td></tr>
+                            <tr>
+                                <td colspan="4" class="text-center py-4">Loading listings...</td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
@@ -100,7 +131,9 @@
                             </tr>
                         </thead>
                         <tbody id="adminUsersTable">
-                            <tr><td colspan="4" class="text-center py-4">Loading users...</td></tr>
+                            <tr>
+                                <td colspan="4" class="text-center py-4">Loading users...</td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
@@ -122,7 +155,9 @@
                             </tr>
                         </thead>
                         <tbody id="adminReservationsTable">
-                            <tr><td colspan="4" class="text-center py-4">Loading reservations...</td></tr>
+                            <tr>
+                                <td colspan="4" class="text-center py-4">Loading reservations...</td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
@@ -137,7 +172,8 @@
                     <form id="addAmenityForm" class="mb-4">
                         <div class="row g-3 align-items-center">
                             <div class="col">
-                                <input type="text" id="amenityName" class="form-control" placeholder="New amenity name" required>
+                                <input type="text" id="amenityName" class="form-control" placeholder="New amenity name"
+                                    required>
                             </div>
                             <div class="col-auto">
                                 <button type="submit" class="btn btn-primary">Add Amenity</button>
@@ -152,7 +188,9 @@
                             </tr>
                         </thead>
                         <tbody id="amenitiesTable">
-                            <tr><td colspan="2" class="text-center py-4">Loading amenities...</td></tr>
+                            <tr>
+                                <td colspan="2" class="text-center py-4">Loading amenities...</td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
@@ -162,4 +200,7 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>window.basePath = '{{ basePath }}';</script>
 <script src="../js/admin-dashboard.js" type="module"></script>
+</body>
+</html>

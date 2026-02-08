@@ -12,12 +12,12 @@ export async function initNavbar() {
         const response = await fetch('includes/navbar.html');
         const navbarHtml = await response.text();
         navbarContainer.innerHTML = navbarHtml;
-        
+
         // Now that the navbar is loaded, initialize its components
         await updateAuthLinks();
         initializeThemeToggle();
         setActiveNavLink();
-        
+
         // Initialize language selector listener
         const languageSelect = document.getElementById('language-select');
         if (languageSelect) {
@@ -45,8 +45,8 @@ async function updateAuthLinks() {
                     Welcome, ${userName}
                 </a>
                 <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-                    <li><a class="dropdown-item" href="profile.php">Profile</a></li>
-                    <li><a class="dropdown-item" href="my-listings.php">My Listings</a></li>
+                    <li><a class="dropdown-item" href="${window.basePath}/profile">Profile</a></li>
+                    <li><a class="dropdown-item" href="${window.basePath}/owner/my-listings">My Listings</a></li>
                     <li><hr class="dropdown-divider"></li>
                     <li><a class="dropdown-item" href="#" id="logout-button">Logout</a></li>
                 </ul>
@@ -60,8 +60,8 @@ async function updateAuthLinks() {
     } else {
         // User is logged out
         authLinksContainer.innerHTML = `
-            <li class="nav-item"><a class="nav-link" href="login.php">Login</a></li>
-            <li class="nav-item"><a class="nav-link btn btn-primary" href="register.php">Register</a></li>
+            <li class="nav-item"><a class="nav-link" href="${window.basePath}/login">Login</a></li>
+            <li class="nav-item"><a class="nav-link btn btn-primary" href="${window.basePath}/register">Register</a></li>
         `;
     }
 

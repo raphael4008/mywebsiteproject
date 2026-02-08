@@ -12,7 +12,7 @@ function render(string $template, array $data = [], string $layout = 'layout'): 
         return;
     }
 
-    // Make data available to the template
+    // Make data available to the template and layout
     extract($data);
 
     // Capture the content of the main template
@@ -20,28 +20,21 @@ function render(string $template, array $data = [], string $layout = 'layout'): 
     include $templatePath;
     $content = ob_get_clean();
 
-    // The layout will have access to the original data and the captured content
-    $data['content'] = $content;
+    // Capture the content of the layout
+    ob_start();
+    include $layoutPath;
+    $final_output = ob_get_clean();
 
-    // Create a function to replace placeholders
-    $render_layout = function ($path, $data) {
-        extract($data);
-        ob_start();
-        include $path;
-        $layout_content = ob_get_clean();
+    // Replace the content placeholder first
+    $final_output = str_replace('{{ content }}', $content, $final_output);
 
-        // Replace placeholders
-        $layout_content = str_replace('{{ content }}', $data['content'], $layout_content);
-        $layout_content = str_replace('{{ basePath }}', $GLOBALS['basePath'] ?? '', $layout_content);
-        foreach ($data as $key => $value) {
-            if ($key === 'content')
-                continue; // Already replaced
-            if (!is_array($value) && !is_object($value)) {
-                $layout_content = str_replace("{{ " . $key . " }}", $value, $layout_content);
-            }
+    // Replace the base path and other data placeholders
+    $final_output = str_replace('{{ basePath }}', $GLOBALS['basePath'] ?? '', $final_output);
+    foreach ($data as $key => $value) {
+        if (!is_array($value) && !is_object($value)) {
+            $final_output = str_replace("{{ " . $key . " }}", $value, $final_output);
         }
-        echo $layout_content;
-    };
+    }
 
-    $render_layout($layoutPath, $data);
+    echo $final_output;
 }

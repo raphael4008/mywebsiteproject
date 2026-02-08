@@ -1,51 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content=""> <!-- CSRF token will be injected by the server -->
     <title>Owner Dashboard – HouseHunter</title>
-    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="{{ basePath }}/css/styles.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vanilla-js-calendar@1.6.5/build/vanilla-js-calendar.min.css">
-    <link rel="stylesheet" href="../css/owner-dashboard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+        integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/vanilla-js-calendar@1.6.5/build/vanilla-js-calendar.min.css">
+    <link rel="stylesheet" href="{{ basePath }}/css/owner-dashboard.css">
 </head>
+
 <body class="bg-light">
     <div class="d-flex">
         <!-- Sidebar -->
         <div class="sidebar d-flex flex-column flex-shrink-0 p-3" style="width: 280px;">
-            <a href="/" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none px-3">
+            <a href="{{ basePath }}/"
+                class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none px-3">
                 <span class="fs-4 fw-bold">Owner Portal</span>
             </a>
             <hr>
             <ul class="nav nav-pills flex-column mb-auto">
                 <li class="nav-item">
-                    <a href="#overview" class="nav-link active" data-section="overview"><i class="fas fa-chart-pie me-2"></i> Overview</a>
+                    <a href="#overview" class="nav-link active" data-section="overview"><i
+                            class="fas fa-chart-pie me-2"></i> Overview</a>
                 </li>
                 <li>
-                    <a href="#properties" class="nav-link" data-section="properties"><i class="fas fa-building me-2"></i> My Properties</a>
+                    <a href="#properties" class="nav-link" data-section="properties"><i
+                            class="fas fa-building me-2"></i> My Properties</a>
                 </li>
                 <li>
-                    <a href="#reservations" class="nav-link" data-section="reservations"><i class="fas fa-calendar-check me-2"></i> Reservations</a>
+                    <a href="#reservations" class="nav-link" data-section="reservations"><i
+                            class="fas fa-calendar-check me-2"></i> Reservations</a>
                 </li>
                 <li>
-                    <a href="#financials" class="nav-link" data-section="financials"><i class="fas fa-dollar-sign me-2"></i> Financials</a>
+                    <a href="#financials" class="nav-link" data-section="financials"><i
+                            class="fas fa-dollar-sign me-2"></i> Financials</a>
                 </li>
                 <li>
-                    <a href="#messages" class="nav-link" data-section="messages"><i class="fas fa-comments me-2"></i> Messages</a>
+                    <a href="#messages" class="nav-link" data-section="messages"><i class="fas fa-comments me-2"></i>
+                        Messages</a>
                 </li>
                 <li>
-                    <a href="../rental-agreements.html" class="nav-link"><i class="fas fa-file-contract me-2"></i> Agreements</a>
+                    <a href="{{ basePath }}/rental-agreements" class="nav-link"><i
+                            class="fas fa-file-contract me-2"></i>
+                        Agreements</a>
                 </li>
             </ul>
             <hr>
             <div class="dropdown px-3">
-                <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" id="dropdownUser1" data-bs-toggle="dropdown" aria-expanded="false">
-                    <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px;">O</div>
+                <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle"
+                    id="dropdownUser1" data-bs-toggle="dropdown" aria-expanded="false">
+                    <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center me-2"
+                        style="width: 32px; height: 32px;">O</div>
                     <strong id="ownerNameDisplay"></strong>
                 </a>
                 <ul class="dropdown-menu dropdown-menu-dark text-small shadow" aria-labelledby="dropdownUser1">
-                    <li><a class="dropdown-item" href="../profile.html">Profile</a></li>
-                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="{{ basePath }}/profile">Profile</a></li>
+                    <li>
+                        <hr class="dropdown-divider">
+                    </li>
                     <li><a class="dropdown-item" href="#" id="logoutBtn">Sign out</a></li>
                 </ul>
             </div>
@@ -75,7 +93,8 @@
                                     <p class="text-muted mb-1">Active Listings</p>
                                     <h3 class="fw-bold mb-0" id="activeListings">0</h3>
                                 </div>
-                                <div class="bg-light text-success rounded p-3"><i class="fas fa-check-circle fa-2x"></i></div>
+                                <div class="bg-light text-success rounded p-3"><i class="fas fa-check-circle fa-2x"></i>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -102,7 +121,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <h4 class="fw-bold mb-3">Recent Activity</h4>
                 <div class="card table-card">
                     <div class="card-body p-0">
@@ -117,7 +136,9 @@
                                     </tr>
                                 </thead>
                                 <tbody id="recentActivityTable">
-                                    <tr><td colspan="4" class="text-center py-4 text-muted">Loading activity...</td></tr>
+                                    <tr>
+                                        <td colspan="4" class="text-center py-4 text-muted">Loading activity...</td>
+                                    </tr>
                                 </tbody>
                             </table>
                         </div>
@@ -129,7 +150,8 @@
             <div id="properties-section" class="content-section d-none" aria-live="polite">
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h2 class="fw-bold">My Properties</h2>
-                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addPropertyModal"><i class="fas fa-plus me-2"></i> Add New Property</button>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addPropertyModal"><i
+                            class="fas fa-plus me-2"></i> Add New Property</button>
                 </div>
                 <div id="propertiesList" class="row g-4"></div>
             </div>
@@ -181,7 +203,9 @@
                                     </tr>
                                 </thead>
                                 <tbody id="transactionsTable">
-                                    <tr><td colspan="5" class="text-center py-4 text-muted">Loading transactions...</td></tr>
+                                    <tr>
+                                        <td colspan="5" class="text-center py-4 text-muted">Loading transactions...</td>
+                                    </tr>
                                 </tbody>
                             </table>
                         </div>
@@ -212,7 +236,8 @@
                             <div class="card-footer">
                                 <form id="sendMessageForm">
                                     <div class="input-group">
-                                        <input type="text" id="messageInput" class="form-control" placeholder="Type a message..." disabled>
+                                        <input type="text" id="messageInput" class="form-control"
+                                            placeholder="Type a message..." disabled>
                                         <button class="btn btn-primary" type="submit" disabled>Send</button>
                                     </div>
                                 </form>
@@ -320,15 +345,18 @@
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Rent Amount (KES)</label>
-                                <input type="number" name="rent_amount" id="edit-rent_amount" class="form-control" required>
+                                <input type="number" name="rent_amount" id="edit-rent_amount" class="form-control"
+                                    required>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Deposit Amount (KES)</label>
-                                <input type="number" name="deposit_amount" id="edit-deposit_amount" class="form-control" required>
+                                <input type="number" name="deposit_amount" id="edit-deposit_amount" class="form-control"
+                                    required>
                             </div>
                             <div class="col-12">
                                 <label class="form-label">Description</label>
-                                <textarea name="description" id="edit-description" class="form-control" rows="3" required></textarea>
+                                <textarea name="description" id="edit-description" class="form-control" rows="3"
+                                    required></textarea>
                             </div>
                             <div class="col-12">
                                 <label class="form-label">Images</label>
@@ -384,5 +412,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/vanilla-js-calendar@1.6.5/build/vanilla-js-calendar.min.js"></script>
-    <script src="../js/owner-dashboard.js" type="module"></script>
+    <script>window.basePath = '{{ basePath }}';</script>
+    <script src="{{ basePath }}/js/owner-dashboard.js" type="module"></script>
 </body>
+</html>

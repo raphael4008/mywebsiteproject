@@ -56,7 +56,7 @@ function renderListingDetails(listing) {
             </div>
         </div>
     `;
-    
+
     container.querySelector('.favorite-btn')?.addEventListener('click', () => toggleFavorite(container.querySelector('.favorite-btn'), listing.id));
     container.querySelector('#shareBtn')?.addEventListener('click', () => {
         if (navigator.share) {
@@ -76,7 +76,7 @@ function renderAgentInfo(agent) {
         container.innerHTML = '<p class="text-muted">Agent information not available.</p>';
         return;
     }
-    
+
     container.innerHTML = `
         <a href="agent-profile.php?id=${agent.id}">
             <img src="${getImageUrl(agent.profile_pic, 'images/placeholder.svg')}" class="img-fluid rounded-circle mb-3" style="width: 100px; height: 100px; object-fit: cover;" alt="Agent ${agent.name}">
@@ -127,7 +127,7 @@ function handleContactAgentForm(listingId) {
 function renderAmenities(listing) {
     const container = document.getElementById('amenities-list');
     if (!container) return;
-    
+
     const amenities = listing.amenities;
     if (!amenities || amenities.length === 0) {
         document.getElementById('amenities-section').style.display = 'none';
@@ -255,11 +255,11 @@ async function initListingDetailsPage(listingId) {
             download: false
         });
     }
-    
+
     const neighborhoodContainer = document.getElementById('neighborhood-details');
     if (neighborhoodContainer) {
         if (listingData.neighborhood) {
-             neighborhoodContainer.innerHTML = `
+            neighborhoodContainer.innerHTML = `
                 <div class="d-flex align-items-start">
                     <i class="fas fa-map-marked-alt text-primary fa-3x me-3"></i>
                     <div>
@@ -273,7 +273,7 @@ async function initListingDetailsPage(listingId) {
                 </div>
             `;
         } else {
-             document.getElementById('neighborhood-section').style.display = 'none';
+            document.getElementById('neighborhood-section').style.display = 'none';
         }
     }
 }
@@ -290,7 +290,7 @@ let totalListings = 0;
 
 function setupMasonryGrid() {
     const listingsContainer = document.getElementById('all-listings-container');
-    if(!listingsContainer) return;
+    if (!listingsContainer) return;
     listingsContainer.style.display = 'flex';
     listingsContainer.style.alignItems = 'flex-start';
     initLazyLoading();
@@ -327,7 +327,7 @@ function hideLoader() {
 
 function showSkeletonCards(count = 8) {
     const container = document.getElementById('all-listings-container');
-    if(!container) return;
+    if (!container) return;
     container.innerHTML = '';
     const columnCount = getColumnCount();
     for (let i = 0; i < columnCount; i++) {
@@ -368,7 +368,7 @@ function relayoutColumns() {
     });
 }
 
-const debounce = (fn, wait = 150) => { let t = null; return function(...args) { clearTimeout(t); t = setTimeout(() => fn.apply(this, args), wait); }; };
+const debounce = (fn, wait = 150) => { let t = null; return function (...args) { clearTimeout(t); t = setTimeout(() => fn.apply(this, args), wait); }; };
 const relayoutColumnsDebounced = debounce(relayoutColumns, 180);
 
 function createPinterestListingCard(listing) {
@@ -416,7 +416,7 @@ async function fetchAndRenderListings() {
         const params = new URLSearchParams(window.location.search);
         params.set('offset', currentPage * limit);
         params.set('limit', limit);
-        
+
         const response = await apiClient.request(`/listings/search?${params.toString()}`);
         const new_listings = response.data;
         totalListings = response.total;
@@ -435,7 +435,7 @@ async function fetchAndRenderListings() {
             });
             currentPage++;
         } else if (listings.length === 0) {
-             document.getElementById('all-listings-container').innerHTML = '<p class="text-center w-100 py-5">No listings found for your criteria.</p>';
+            document.getElementById('all-listings-container').innerHTML = '<p class="text-center w-100 py-5">No listings found for your criteria.</p>';
         }
 
     } catch (error) {
@@ -539,7 +539,7 @@ function initListingsPage() {
     handleAiSearch();
     handleFilterForm();
     window.addEventListener('scroll', handleInfiniteScroll);
-    
+
     let previousColumnCount = getColumnCount();
     const onResize = debounce(() => {
         const newCount = getColumnCount();
@@ -559,17 +559,36 @@ function initListingsPage() {
 // --- INITIALIZATION ---
 
 document.addEventListener('DOMContentLoaded', () => {
-    const path = window.location.pathname;
-    
-    if (path.includes('listing-details.php')) {
-        const listingId = window.initialListingData ? window.initialListingData.id : new URLSearchParams(window.location.search).get('id');
-        
+    const listingDetailsContent = document.getElementById('listing-details-content');
+    const allListingsContainer = document.getElementById('all-listings-container');
+
+    if (listingDetailsContent) {
+        let listingId = null;
+
+        // Try to get ID from initial data
+        if (window.initialListingData && window.initialListingData.id) {
+            listingId = window.initialListingData.id;
+        }
+
+        // Try to get ID from URL query param
+        if (!listingId) {
+            listingId = new URLSearchParams(window.location.search).get('id');
+        }
+
+        // Try to get ID from URL path (e.g. /listing/123)
+        if (!listingId) {
+            const matches = window.location.pathname.match(/\/listing\/(\d+)/);
+            if (matches && matches[1]) {
+                listingId = matches[1];
+            }
+        }
+
         if (listingId) {
             initListingDetailsPage(listingId);
         } else {
-            document.body.innerHTML = '<div class="alert alert-danger">No listing ID provided.</div>';
+            listingDetailsContent.innerHTML = '<div class="alert alert-danger">No listing ID provided.</div>';
         }
-    } else if (path.includes('listings.php')) {
+    } else if (allListingsContainer) {
         initListingsPage();
     }
 });

@@ -11,7 +11,7 @@ function createListingCard(listing) {
     const price = new Intl.NumberFormat('en-KE', { style: 'currency', currency: 'KES' }).format(listing.price);
 
     card.innerHTML = `
-        <a href="/listing/${listing.id}" class="text-decoration-none text-dark">
+        <a href="${window.basePath}/listing/${listing.id}" class="text-decoration-none text-dark">
             <img src="${imageUrl}" class="card-img-top" alt="${listing.title}" style="height: 200px; object-fit: cover;">
             <div class="card-body">
                 <h5 class="card-title">${listing.title}</h5>
@@ -66,7 +66,7 @@ export function initHome() {
         aiSearchBtn.addEventListener('click', () => {
             const query = aiSearchInput.value;
             if (query) {
-                window.location.href = `listings.php?ai_query=${encodeURIComponent(query)}`;
+                window.location.href = `${window.basePath}/listings?ai_query=${encodeURIComponent(query)}`;
             }
         });
     }
@@ -85,10 +85,10 @@ export function initHome() {
             if (city) params.append('city', city);
             if (maxRent) params.append('maxRent', maxRent);
 
-            window.location.href = `listings.php?${params.toString()}`;
+            window.location.href = `${window.basePath}/listings?${params.toString()}`;
         });
     }
-    
+
     fetchFeaturedListings();
 }
 

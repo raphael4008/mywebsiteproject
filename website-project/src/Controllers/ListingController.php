@@ -14,11 +14,9 @@ use OpenAI;
 
 class ListingController extends BaseController
 {
-    private $pdo;
-
     public function __construct()
     {
-        $this->pdo = \App\Config\DatabaseConnection::getInstance()->getConnection();
+        parent::__construct();
     }
 
     public function search()

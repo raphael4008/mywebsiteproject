@@ -22,7 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const price = formatCurrency(listing.price);
 
         card.innerHTML = `
-            <a href="listing-details.php?id=${listing.id}" class="text-decoration-none text-dark">
+            <a href="${window.basePath}/listing/${listing.id}" class="text-decoration-none text-dark">
                 <div class="position-relative">
                     <img src="${imageUrl}" class="card-img-top" alt="${listing.title}" style="height: 220px; object-fit: cover;">
                     <div class="badge bg-primary position-absolute top-0 start-0 m-2">${listing.status}</div>
@@ -45,7 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             toggleFavorite(e.currentTarget, listing.id);
         });
-        
+
         col.appendChild(card);
         return col;
     }
@@ -69,19 +69,19 @@ document.addEventListener('DOMContentLoaded', () => {
         const params = new URLSearchParams(window.location.search);
         params.set('page', currentPage);
         params.set('limit', limit);
-        
+
         const filterForm = document.getElementById('listingsFilterForm');
         if (filterForm) {
             const city = document.getElementById('filterCity').value;
             const type = document.getElementById('filterType').value;
             const price = document.getElementById('filterPrice').value;
-            if(city) params.set('city', city);
-            if(type) params.set('htype', type);
-            if(price) params.set('maxRent', price);
+            if (city) params.set('city', city);
+            if (type) params.set('htype', type);
+            if (price) params.set('maxRent', price);
         }
-        
+
         const sort = document.getElementById('sortListings').value;
-        if(sort) params.set('sort', sort);
+        if (sort) params.set('sort', sort);
 
         try {
             const response = await apiClient.request(`/listings/search?${params.toString()}`);
@@ -136,7 +136,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (city) params.set('city', city);
                 if (type) params.set('htype', type);
                 if (price) params.set('maxRent', price);
-                
+
                 history.pushState(null, '', `?${params.toString()}`);
                 fetchListings(true);
             });
@@ -144,17 +144,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (sortSelect) {
             sortSelect.addEventListener('change', () => {
-                 const params = new URLSearchParams(window.location.search);
-                 params.set('sort', sortSelect.value);
-                 history.pushState(null, '', `?${params.toString()}`);
+                const params = new URLSearchParams(window.location.search);
+                params.set('sort', sortSelect.value);
+                history.pushState(null, '', `?${params.toString()}`);
                 fetchListings(true);
             });
         }
-        
-        if(clearFiltersBtn) {
+
+        if (clearFiltersBtn) {
             clearFiltersBtn.addEventListener('click', () => {
-                if(filterForm) filterForm.reset();
-                if(sortSelect) sortSelect.value = 'newest';
+                if (filterForm) filterForm.reset();
+                if (sortSelect) sortSelect.value = 'newest';
                 history.pushState(null, '', window.location.pathname);
 
                 document.getElementById('filterCity').value = '';
@@ -164,7 +164,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 fetchListings(true);
             });
         }
-        
+
         window.addEventListener('popstate', () => {
             const params = new URLSearchParams(window.location.search);
             if (filterForm) {

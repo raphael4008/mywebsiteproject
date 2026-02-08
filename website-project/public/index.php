@@ -44,51 +44,54 @@ try {
 
     // --- Web View Routes ---
     $router->get('/', function () {
-        require __DIR__ . '/home.php';
+        App\Helpers\render('home', ['title' => 'HouseHunter - Find Your Dream Home']);
     });
     $router->get('/listings', function () {
-        require __DIR__ . '/listings.php';
+        App\Helpers\render('listings', ['title' => 'Browse Listings - HouseHunter']);
     });
     $router->get('/listing/(\d+)', function ($id) {
         $_GET['id'] = $id;
-        require __DIR__ . '/listing-details.php';
+        App\Helpers\render('listing-details', [
+            'title' => 'Listing Details - HouseHunter',
+            'initialListingData' => 'null' // Data will be fetched via API
+        ]);
     });
     $router->get('/features', function () {
-        require __DIR__ . '/features.php';
+        App\Helpers\render('features', ['title' => 'Features - HouseHunter']);
     });
     $router->get('/compare', function () {
-        require __DIR__ . '/compare.php';
+        App\Helpers\render('compare', ['title' => 'Compare Listings - HouseHunter']);
     });
     $router->get('/neighborhoods', function () {
-        require __DIR__ . '/neighborhood.php';
+        App\Helpers\render('neighborhood', ['title' => 'Neighborhoods - HouseHunter']);
     });
     $router->get('/contact', function () {
-        require __DIR__ . '/contact.php';
+        App\Helpers\render('contact', ['title' => 'Contact Us - HouseHunter']);
     });
     $router->get('/about', function () {
-        require __DIR__ . '/about.php';
+        App\Helpers\render('about', ['title' => 'About Us - HouseHunter']);
     });
     $router->get('/terms', function () {
-        require __DIR__ . '/terms.php';
+        App\Helpers\render('terms', ['title' => 'Terms of Service - HouseHunter']);
     });
     $router->get('/privacy-policy', function () {
-        require __DIR__ . '/privacy-policy.php';
+        App\Helpers\render('privacy-policy', ['title' => 'Privacy Policy - HouseHunter']);
     });
     $router->get('/agents', function () {
-        require __DIR__ . '/agents.php';
+        App\Helpers\render('agents', ['title' => 'Our Agents - HouseHunter']);
     });
     $router->get('/agent-profile', function () {
-        require __DIR__ . '/agent-profile.php';
+        App\Helpers\render('agent-profile', ['title' => 'Agent Profile - HouseHunter']);
     });
 
     $router->get('/login', function () {
-        require __DIR__ . '/login.php';
+        App\Helpers\render('login', ['title' => 'Login - HouseHunter']);
     });
     $router->get('/register', function () {
-        require __DIR__ . '/register.php';
+        App\Helpers\render('register', ['title' => 'Register - HouseHunter']);
     });
     $router->get('/forgot-password', function () {
-        require __DIR__ . '/forgot-password.php';
+        App\Helpers\render('forgot-password', ['title' => 'Forgot Password - HouseHunter']);
     });
     $router->get('/logout', function () {
         session_destroy();
@@ -100,19 +103,16 @@ try {
         exit();
     });
     $router->get('/profile', function () {
-        require __DIR__ . '/profile.php';
+        App\Helpers\render('profile', ['title' => 'My Profile - HouseHunter']);
     });
     $router->get('/my-reservations', function () {
-        require __DIR__ . '/profile.php';
+        App\Helpers\render('profile', ['title' => 'My Reservations - HouseHunter']);
     });
     $router->get('/saved-searches', function () {
-        require __DIR__ . '/profile.php';
+        App\Helpers\render('profile', ['title' => 'Saved Searches - HouseHunter']);
     });
     $router->get('/favorites', function () {
-        require __DIR__ . '/profile.php';
-    });
-    $router->get('/favorites', function () {
-        require __DIR__ . '/profile.php';
+        App\Helpers\render('profile', ['title' => 'My Favorites - HouseHunter']);
     });
 
     // Helper to prevent caching for protected routes
@@ -124,31 +124,32 @@ try {
 
     $router->get('/owner/dashboard', function () use ($preventCache) {
         $preventCache();
-        require __DIR__ . '/owners/index.php';
+        // Use owner-dashboard as the template, and layout-empty as the wrapper (since owner-dashboard has its own HTML structure)
+        App\Helpers\render('owner-dashboard', ['title' => 'Owner Dashboard - HouseHunter'], 'layout-empty');
     });
     $router->get('/owner/my-listings', function () use ($preventCache) {
         $preventCache();
-        require __DIR__ . '/owners/index.php';
+        App\Helpers\render('owner-dashboard', ['title' => 'My Listings - HouseHunter'], 'layout-empty');
     });
     $router->get('/owner/add-listing', function () use ($preventCache) {
         $preventCache();
-        require __DIR__ . '/owners/index.php';
+        App\Helpers\render('owner-dashboard', ['title' => 'Add Listing - HouseHunter'], 'layout-empty');
     });
     $router->get('/owner/bookings', function () use ($preventCache) {
         $preventCache();
-        require __DIR__ . '/owners/index.php';
+        App\Helpers\render('owner-dashboard', ['title' => 'Bookings - HouseHunter'], 'layout-empty');
     });
     $router->get('/admin/dashboard', function () use ($preventCache) {
         $preventCache();
-        require __DIR__ . '/admin/index.php';
+        App\Helpers\render('admin-dashboard', ['title' => 'Admin Dashboard - HouseHunter'], 'admin-dashboard');
     });
     $router->get('/admin/users', function () use ($preventCache) {
         $preventCache();
-        require __DIR__ . '/admin/index.php';
+        App\Helpers\render('admin-dashboard', ['title' => 'Manage Users - HouseHunter'], 'admin-dashboard');
     });
     $router->get('/admin/approve-listings', function () use ($preventCache) {
         $preventCache();
-        require __DIR__ . '/admin/index.php';
+        App\Helpers\render('admin-dashboard', ['title' => 'Approve Listings - HouseHunter'], 'admin-dashboard');
     });
 
 
@@ -274,7 +275,7 @@ try {
         }
         else {
             http_response_code(404);
-            require __DIR__ . '/404.php';
+            App\Helpers\render('404', ['title' => 'Page Not Found - HouseHunter']);
         }
     });
 

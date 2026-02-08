@@ -5,6 +5,11 @@ use App\Helpers\JwtMiddleware;
 
 class AdminController extends BaseController
 {
+    public function __construct()
+    {
+        parent::__construct();
+    }
+
     /**
      * Get aggregated system-wide statistics for the admin dashboard.
      */

@@ -2,6 +2,13 @@
 namespace App\Controllers;
 
 class BaseController {
+    protected $pdo;
+
+    public function __construct()
+    {
+        $this->pdo = \App\Config\DatabaseConnection::getInstance()->getConnection();
+    }
+
     protected function jsonResponse($data, $statusCode = 200) {
         // Clear buffer to remove any PHP notices/warnings that might break JSON
         while (ob_get_level()) ob_end_clean();
